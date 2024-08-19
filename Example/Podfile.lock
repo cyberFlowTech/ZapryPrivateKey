@@ -1,0 +1,16 @@
+PODS:
+  - ZapryPrivateKey (0.1.0)
+
+DEPENDENCIES:
+  - ZapryPrivateKey (from `../`)
+
+EXTERNAL SOURCES:
+  ZapryPrivateKey:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  ZapryPrivateKey: 7e95f84ae017e55dcb5315ebf426b4215de43b82
+
+PODFILE CHECKSUM: d165134f85a58f7dce36cd23944d7b15dd24bbda
+
+COCOAPODS: 1.15.2

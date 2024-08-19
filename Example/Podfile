@@ -1,0 +1,13 @@
+use_frameworks!
+
+platform :ios, '10.0'
+
+target 'ZapryPrivateKey_Example' do
+  pod 'ZapryPrivateKey', :path => '../'
+
+  target 'ZapryPrivateKey_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end

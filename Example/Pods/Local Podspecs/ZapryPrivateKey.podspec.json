@@ -1,0 +1,22 @@
+{
+  "name": "ZapryPrivateKey",
+  "version": "0.1.0",
+  "summary": "A short description of ZapryPrivateKey.",
+  "description": "TODO: Add long description of the pod here.",
+  "homepage": "https://github.com/285275534/ZapryPrivateKey",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "285275534": "285275534@qq.com"
+  },
+  "source": {
+    "git": "https://github.com/285275534/ZapryPrivateKey.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "10.0"
+  },
+  "source_files": "ZapryPrivateKey/Classes/**/*"
+}
