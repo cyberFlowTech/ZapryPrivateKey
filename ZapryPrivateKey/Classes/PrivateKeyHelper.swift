@@ -10,7 +10,7 @@ import UIKit
 
 open class PrivateKeyHelper: NSObject {
     
-    private let key = "123"
+    private let key = "1234"
     
     public func createKey() -> String {
         return key
