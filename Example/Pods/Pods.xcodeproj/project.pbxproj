@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0411D1BA2C723990006EFFAF /* PrivateKeyHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0411D1B82C72396B006EFFAF /* PrivateKeyHelper.swift */; };
+		0411D1E92C74B0BD006EFFAF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0411D1E82C74B0BD006EFFAF /* Assets.xcassets */; };
 		0441EB1542053C37FBC00FC2DA0E48C7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */; };
 		4CA038E7B26FF2201589507D7254CAC1 /* Pods-ZapryPrivateKey_Tests-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = A5454E7A6122DAD5CA3D24AF01342CBD /* Pods-ZapryPrivateKey_Tests-dummy.m */; };
 		4DBE93F490A3AB6A3F4B40A5E23FE702 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */; };
@@ -38,6 +39,7 @@
 
 /* Begin PBXFileReference section */
 		0411D1B82C72396B006EFFAF /* PrivateKeyHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PrivateKeyHelper.swift; path = ZapryPrivateKey/Classes/PrivateKeyHelper.swift; sourceTree = "<group>"; };
+		0411D1E82C74B0BD006EFFAF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ZapryPrivateKey/Assets/Assets.xcassets; sourceTree = "<group>"; };
 		0577F56E017A473AD1FF02941F603C72 /* Pods-ZapryPrivateKey_Example-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-ZapryPrivateKey_Example-Info.plist"; sourceTree = "<group>"; };
 		11C4CC8C827879DAD7997DF19C94AE60 /* Pods-ZapryPrivateKey_Tests-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-ZapryPrivateKey_Tests-umbrella.h"; sourceTree = "<group>"; };
 		14785A6576D6A214A0E16E6E9F97568E /* Pods-ZapryPrivateKey_Example-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-ZapryPrivateKey_Example-acknowledgements.markdown"; sourceTree = "<group>"; };
@@ -103,6 +105,7 @@
 		0C5A29D5AF990060F0A164DC2219624D /* ZapryPrivateKey */ = {
 			isa = PBXGroup;
 			children = (
+				0411D1E82C74B0BD006EFFAF /* Assets.xcassets */,
 				0411D1B82C72396B006EFFAF /* PrivateKeyHelper.swift */,
 				E21DEC4B918AFF5367EB21B4E9BE4FBC /* Pod */,
 				148CE4CD12B256A8C1CD9D469FD822F8 /* Support Files */,
@@ -355,6 +358,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0411D1E92C74B0BD006EFFAF /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
