@@ -1,0 +1,36 @@
+# Xcode
+#
+# gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
+
+## User settings
+Example/xcuserdata/
+
+## compatibility with Xcode 8 and earlier (ignoring not required starting Xcode 9)
+Example/*.xcscmblueprint
+Example/*.xccheckout
+
+## compatibility with Xcode 3 and earlier (ignoring not required starting Xcode 4)
+Example/build/
+Example/DerivedData/
+Example/*.moved-aside
+Example/*.pbxuser
+Example/!default.pbxuser
+Example/*.mode1v3
+Example/!default.mode1v3
+Example/*.mode2v3
+!Example/default.mode2v3
+Example/*.perspectivev3
+Example/!default.perspectivev3
+Example/*.xcscheme
+Example/Pods/
+Example/node_modules/
+Example/ReactProject/mimo-wallet-rnapp/node_modules/
+
+
+## IDE
+.idea/
+.vscode/
+.DS_Store
+Example/Podfile.lock
+
+Example/!yarn.lock

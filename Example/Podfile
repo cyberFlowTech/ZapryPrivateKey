@@ -1,13 +1,60 @@
+source 'https://mirrors.tuna.tsinghua.edu.cn/git/CocoaPods/Specs.git'
+require_relative './podfile_rn'
+rnConfig()
+require_relative './node_modules/react-native/scripts/react_native_pods'
+
+platform :ios, '13.0'
+
+linkage = ENV['USE_FRAMEWORKS']
+if linkage != nil
+  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+  use_frameworks! :linkage => linkage.to_sym
+end
+
+target 'ZapryPrivateKey_Example' do 
 use_frameworks!
+pod  'ZapryPrivateKey', :path => '../'
 
-platform :ios, '10.0'
+ use_react_native!(:path => "./node_modules/react-native")
+  
+  pod 'react-native-cameraroll', :path => './node_modules/@react-native-camera-roll/camera-roll'
+  pod 'react-native-get-random-values', :path => './node_modules/react-native-get-random-values'
+  pod 'react-native-pager-view', :path => './node_modules/react-native-pager-view'
+  pod 'react-native-randombytes', :path => './node_modules/react-native-randombytes'
+  pod 'react-native-safe-area-context', :path => './node_modules/react-native-safe-area-context'
+  pod 'react-native-view-shot', :path => './node_modules/react-native-view-shot'
+  pod 'react-native-webview', :path => './node_modules/react-native-webview'
+  pod 'RNCAsyncStorage', :path => './node_modules/@react-native-async-storage/async-storage'
+  pod 'RNCClipboard', :path => './node_modules/@react-native-clipboard/clipboard'
+  pod 'RNCMaskedView', :path => './node_modules/@react-native-masked-view/masked-view'
+  pod 'RNFS', :path => './node_modules/react-native-fs'
+  pod 'RNGestureHandler', :path => './node_modules/react-native-gesture-handler'
+  pod 'RNReanimated', :path => './node_modules/react-native-reanimated'
+  pod 'RNScreens', :path => './node_modules/react-native-screens'
+  pod 'RNSVG', :path => './node_modules/react-native-svg'
+  pod 'RNVectorIcons', :path => './node_modules/react-native-vector-icons'
+  pod 'RNLocalize', :path => './node_modules/react-native-localize'
+  pod 'react-native-get-random-values', :path => './node_modules/react-native-get-random-values'
+  pod 'react-native-video', :path => './node_modules/react-native-video' 
+  pod 'RNFastImage', :path => './node_modules/react-native-fast-image'
+  pod 'lottie-react-native', :path => './node_modules/lottie-react-native'
+end
 
-target 'ZapryPrivateKey_Example' do
-  pod 'ZapryPrivateKey', :path => '../'
-
-  target 'ZapryPrivateKey_Tests' do
-    inherit! :search_paths
-
-    
+post_install do |installer|
+  installer.generated_projects.each do |project|
+    project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      end
+      if target.name == 'HandyJSON'
+        target.build_configurations.each do |config|
+          config.build_settings['SWIFT_COMPILATION_MODE'] = 'incremental'
+        end
+      end
+    end
   end
+  react_native_post_install(installer)
+        __apply_Xcode_12_5_M1_post_install_workaround(installer)
+        `sed -i -e  $'s/__IPHONE_10_0/__IPHONE_12_0/' Pods/RCT-Folly/folly/portability/Time.h`
+  
 end

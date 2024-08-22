@@ -12,11 +12,26 @@
     "285275534": "285275534@qq.com"
   },
   "source": {
-    "git": "https://github.com/285275534/ZapryPrivateKey.git",
+    "git": "file:./ZapryPrivateKey",
     "tag": "0.1.0"
   },
+  "swift_versions": "5.0",
+  "requires_arc": true,
   "platforms": {
-    "ios": "10.0"
+    "ios": "13.0"
   },
-  "source_files": "ZapryPrivateKey/Classes/**/*"
+  "source_files": "ZapryPrivateKey/**/*.swift",
+  "resources": "ZapryPrivateKey/ZapryPrivateKey.bundle",
+  "dependencies": {
+    "KeychainAccess": [
+      "~> 4.2.2"
+    ],
+    "HandyJSON": [
+      "~> 5.0.2"
+    ],
+    "CryptoSwift": [
+      "~> 1.7.0"
+    ]
+  },
+  "swift_version": "5.0"
 }
