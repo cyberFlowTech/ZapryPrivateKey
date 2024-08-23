@@ -67,7 +67,7 @@ public class PaymentManager: NSObject {
             }
             let alertView = ZaprySwiftAlertView(title:title, content:content,subContent:subContent, confirmText:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "common_skip"), cancelText:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "common_skip"))
             alertView.confirmHandle = { v in
-                var verifyType = hasPassword ? 3 : DeviceInfo.getDeviceBiometricType().rawValue
+                let verifyType = hasPassword ? 3 : DeviceInfo.getDeviceBiometricType().rawValue
                 NotificationCenter.default.post(name: NSNotification.Name("GOTO_SET_VERFICATION_TYPE"), object: nil, userInfo: ["type":verifyType])
                 completion(CheckAction.close.rawValue,"","")
             }
