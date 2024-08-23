@@ -40,6 +40,7 @@ public class PaymentManager: NSObject {
     public static let shared = PaymentManager()
     public static let ERROR_CODE_BIOMETRIC_FAILED:Int = -10001
     public static let ERROR_CODE_PASSWORD_FAILED:Int = -10002
+    private var sceneListWithoutUI:[PaySceneType] = [.unBind,.checkMnemonicWord,.CreateWallet,.VerificationBiometic,.PayPasswordAuth,.AddNewChain,.CloudBackup,.Sign]
     
     public func checkBeforeSet(completion:@escaping (Int,String,String) -> Void) {
         self.checkBeforePayOrSet(hasSet: true,completion: completion)
@@ -55,30 +56,8 @@ public class PaymentManager: NSObject {
         let verificationType = UserConfig.read()
         let window = ZapryUtil.keyWindow()
         if verificationType == .none || verificationType == .denyBiometry || verificationType == .lock {
-            let type = DeviceInfo.getDeviceBiometricType()
-            let hasPassword = forceSetPassworld ? true : (type == .none || type == .denyBiometry || type == .lock)
-            
-            let title = ZapryUtil.shared.getZapryLocalizedStringForKey(key:(hasPassword ? "biometric_setting_pay_password" : "biometric_setting_biometric"))
-            let content = ZapryUtil.shared.getZapryLocalizedStringForKey(key: (hasPassword ? "biometric_setting_pay_password_subtitle" : "biometric_setting_biometric_subtitle"))
-            var subContent:String = ""
-            let hasNoWallet = WalletManager.getWalletAddress().count <= 0
-            if hasNoWallet {
-                subContent = ZapryUtil.shared.getZapryLocalizedStringForKey(key:(hasPassword ? "biometric_setting_pay_password_desc": "biometric_setting_biometric_desc"))
-            }
-            let alertView = ZaprySwiftAlertView(title:title, content:content,subContent:subContent, confirmText:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "common_skip"), cancelText:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "common_skip"))
-            alertView.confirmHandle = { v in
-                let verifyType = hasPassword ? 3 : DeviceInfo.getDeviceBiometricType().rawValue
-                NotificationCenter.default.post(name: NSNotification.Name("GOTO_SET_VERFICATION_TYPE"), object: nil, userInfo: ["type":verifyType])
-                completion(CheckAction.close.rawValue,"","")
-            }
-            alertView.cancelHandle = { v in
-                if !hasPassword {
-                    self.checkBeforePayOrSet(hasSet: hasSet,forceSetPassworld: true,sceneType: sceneType,payModel: payModel, completion: completion)
-                    return
-                }
-                completion(CheckAction.close.rawValue,"","")
-            }
-            alertView.show()
+            //获取异常的处理
+            self.showAlertByNoSetVerifityType(hasSet: hasSet, forceSetPassworld:forceSetPassworld, sceneType:sceneType, payModel: payModel, completion: completion)
         } else {
             if verificationType == .faceID || verificationType == .touchID {
                 let type = DeviceInfo.getDeviceBiometricType()
@@ -99,7 +78,7 @@ public class PaymentManager: NSObject {
                     return
                 }
                 
-                if sceneType == .unBind || sceneType == .checkMnemonicWord || sceneType == .CreateWallet || sceneType == .VerificationBiometic || sceneType == .PayPasswordAuth || sceneType == .AddNewChain || sceneType == .CloudBackup || sceneType == .Sign {
+                if sceneListWithoutUI.contains(sceneType) {
                     var pas:String?
                     if verificationType == .password {
                         //签证只有faceId或者touchId是无界面的，，密码是有界面的
@@ -133,27 +112,26 @@ public class PaymentManager: NSObject {
                     }
                 } else {
                     if sceneType == .checkMnemonicWord || sceneType == .AddNewChain || sceneType == .Sign {
-                            let model = WalletManager.getWalletModel()
-                            if let model = model {
-                                let walletJson = WalletManager.modelToStr(model:model) ?? ""
-                                completion(CheckAction.success.rawValue,walletJson,"")
-                            }else {
-                                completion(CheckAction.fail.rawValue,"","")
-                            }
+                        let model = WalletManager.getWalletModel()
+                        if let model = model {
+                            let walletJson = WalletManager.modelToStr(model:model) ?? ""
+                            completion(CheckAction.success.rawValue,walletJson,"")
                         }else {
-                            DeviceInfo.authByFaceIDOrTouchID { e in
-                                if let e {
-                                    completion(CheckAction.fail.rawValue,"","")
-                                } else {
-                                    completion(CheckAction.success.rawValue,"","")
-                                }
+                            completion(CheckAction.fail.rawValue,"","")
+                        }
+                    }else {
+                        DeviceInfo.authByFaceIDOrTouchID { e in
+                            if let _ = e {
+                                completion(CheckAction.fail.rawValue,"","")
+                            } else {
+                                completion(CheckAction.success.rawValue,"","")
                             }
                         }
-                        return
+                    }
+                    return
                 }
-            } else {
-                print("DQ","else sceneType = ",sceneType)
             }
+                
                 var popUp = PayVerificationPopupView.checkPayPopupView(payScene: sceneType)
                 if popUp == nil {
                    popUp = PayVerificationPopupView(frame: .zero, mode: verificationType, payScene: sceneType,payModel: payModel)
@@ -179,5 +157,32 @@ public class PaymentManager: NSObject {
         let code = WalletManager.getChainCode(chainCode: chainCode)
         let address = WalletManager.getWalletAddress(chainCode: code)
         return address
+    }
+    
+    private func showAlertByNoSetVerifityType(hasSet:Bool,forceSetPassworld:Bool,sceneType:PaySceneType,payModel:PayModel,completion:@escaping (Int,String,String) -> Void) {
+        let type = DeviceInfo.getDeviceBiometricType()
+        let hasPassword = forceSetPassworld ? true : (type == .none || type == .denyBiometry || type == .lock)
+        
+        let title = ZapryUtil.shared.getZapryLocalizedStringForKey(key:(hasPassword ? "biometric_setting_pay_password" : "biometric_setting_biometric"))
+        let content = ZapryUtil.shared.getZapryLocalizedStringForKey(key: (hasPassword ? "biometric_setting_pay_password_subtitle" : "biometric_setting_biometric_subtitle"))
+        var subContent:String = ""
+        let hasNoWallet = WalletManager.getWalletAddress().count <= 0
+        if hasNoWallet {
+            subContent = ZapryUtil.shared.getZapryLocalizedStringForKey(key:(hasPassword ? "biometric_setting_pay_password_desc": "biometric_setting_biometric_desc"))
+        }
+        let alertView = ZaprySwiftAlertView(title:title, content:content,subContent:subContent, confirmText:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "common_skip"), cancelText:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "common_skip"))
+        alertView.confirmHandle = { v in
+            let verifyType = hasPassword ? 3 : DeviceInfo.getDeviceBiometricType().rawValue
+            NotificationCenter.default.post(name: NSNotification.Name("GOTO_SET_VERFICATION_TYPE"), object: nil, userInfo: ["type":verifyType])
+            completion(CheckAction.close.rawValue,"","")
+        }
+        alertView.cancelHandle = { v in
+            if !hasPassword {
+                self.checkBeforePayOrSet(hasSet: hasSet,forceSetPassworld: true,sceneType: sceneType,payModel: payModel, completion: completion)
+                return
+            }
+            completion(CheckAction.close.rawValue,"","")
+        }
+        alertView.show()
     }
 }
