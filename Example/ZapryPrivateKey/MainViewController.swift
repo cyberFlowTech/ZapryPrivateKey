@@ -29,6 +29,7 @@ class MainViewController:UIViewController {
         
         NotificationCenter.default.addObserver(self, selector:#selector(removeRNVC(notif: )), name:NSNotification.Name("REMOVERNVC"), object:nil)
         NotificationCenter.default.addObserver(self, selector: #selector(gotoVerifictionTypeVC(notif:)), name: NSNotification.Name("GOTO_SET_VERFICATION_TYPE"), object: nil)
+        NotificationCenter.default.addObserver(self, selector:#selector(gotoWalletVC(notif:)), name: Notification.Name("GOTOWALLET"), object: nil)
         
         UserConfig.shared.userId = "844097"
         ZapryUtil.shared.setPreferredLanguage(preLan: "zh-Hans")
@@ -49,6 +50,10 @@ class MainViewController:UIViewController {
                 RNManager.shared.pushToSetPayAuth(vc: self, type: VerificationType(rawValue: type) ?? .password, params: ["from":"Setting"])
             }
         }
+    }
+    
+    @objc func gotoWalletVC(notif:Notification) {
+        
     }
     
     @objc func clickBtnCallBack(sender:UIButton) {

@@ -48,7 +48,6 @@ public class PaymentManager: NSObject {
     
     public func checkBeforePay(sceneType:Int,payModel:PayModel, completion:@escaping (Int,String,String) -> Void) {
         let type = PaySceneType(rawValue: sceneType) ?? .none
-        print("shy====>\(type)")
         self.checkBeforePayOrSet(hasSet: false, sceneType:type,payModel:payModel, completion: completion)
     }
     
@@ -69,78 +68,36 @@ public class PaymentManager: NSObject {
             }
             if hasSet {
                 completion(CheckAction.success.rawValue,"","")
-            } else {
-                if WalletManager.getWalletAddress().count <= 0 && sceneType != .CreateWallet {
-                    completion(CheckAction.close.rawValue,"","")
-                    //shytodo 打开钱包
-                    completion(CheckAction.close.rawValue,"","")
-//                    RNManager.shared.getWalletVC(navigationVC:UIViewController.getTopNavi())
-                    return
-                }
-                
-                if sceneListWithoutUI.contains(sceneType) {
-                    var pas:String?
-                    if verificationType == .password {
-                        //签证只有faceId或者touchId是无界面的，，密码是有界面的
-                        if sceneType != .Sign  {
-                            if ( MMSecurityStore.hasWalletThatAuthByPayPassword() ) {
-                                pas = MMSecurityStore.getWalletThatAuthByPayPassword(payPassword:payModel.payPassword)
-                            } else {
-                                if let md5 = WalletManager.getCurrentPayPasswordMD5() {
-                                    if ( payModel.payPassword.md5 == md5 ) { // 验证通过
-                                        completion(CheckAction.success.rawValue,"","")
-                                        if ( sceneType == .CreateWallet || sceneType == .CloudBackup ) {
-                                            WalletManager.shared.payPasswordForSet = payModel.payPassword
-                                        }
-                                    } else {
-                                        completion(CheckAction.fail.rawValue,"","")
-                                    }
-                                } else {
-                                    completion(CheckAction.success.rawValue,"","")
-                                }
-                                return
-                            }
-                            if let value = pas,!value.isEmpty {
-                                if sceneType == .CloudBackup || sceneType == .PayPasswordAuth {
-                                    WalletManager.shared.payPasswordForSet = payModel.payPassword;
-                                }
-                                completion(CheckAction.success.rawValue,value,"")
-                            }else {
-                                completion(CheckAction.fail.rawValue,"","")
-                            }
-                            return
+                return
+            }
+            
+            if WalletManager.getWalletAddress().count <= 0 && sceneType != .CreateWallet {
+                completion(CheckAction.close.rawValue,"","")
+                NotificationCenter.default.post(name:Notification.Name("GOTOWALLET"), object:nil, userInfo: nil)
+                return
+            }
+            
+            if sceneListWithoutUI.contains(sceneType) {
+                if verificationType == .password {
+                    //签证只有faceId或者touchId是无界面的，，密码是有界面的
+                    if sceneType != .Sign  {
+                        self.getWalletThatAuthByPayPassword(sceneType: sceneType, payModel: payModel, completion: completion)
+                        return
                     }
                 } else {
-                    if sceneType == .checkMnemonicWord || sceneType == .AddNewChain || sceneType == .Sign {
-                        let model = WalletManager.getWalletModel()
-                        if let model = model {
-                            let walletJson = WalletManager.modelToStr(model:model) ?? ""
-                            completion(CheckAction.success.rawValue,walletJson,"")
-                        }else {
-                            completion(CheckAction.fail.rawValue,"","")
-                        }
-                    }else {
-                        DeviceInfo.authByFaceIDOrTouchID { e in
-                            if let _ = e {
-                                completion(CheckAction.fail.rawValue,"","")
-                            } else {
-                                completion(CheckAction.success.rawValue,"","")
-                            }
-                        }
-                    }
+                    self.authByFaceIDOrTouchID(sceneType:sceneType, payModel: payModel, completion: completion)
                     return
                 }
             }
-                
-                var popUp = PayVerificationPopupView.checkPayPopupView(payScene: sceneType)
-                if popUp == nil {
-                   popUp = PayVerificationPopupView(frame: .zero, mode: verificationType, payScene: sceneType,payModel: payModel)
-                    popUp?.finishedCallback = { resultType,result,error in
-                        completion(resultType.rawValue,result,error)
-                    }
+            
+            var popUp = PayVerificationPopupView.checkPayPopupView(payScene: sceneType)
+            if popUp == nil {
+               popUp = PayVerificationPopupView(frame: .zero, mode: verificationType, payScene: sceneType,payModel: payModel)
+                popUp?.finishedCallback = { resultType,result,error in
+                    completion(resultType.rawValue,result,error)
                 }
-                popUp?.show()
             }
+            popUp?.show()
         }
     }
     
@@ -184,5 +141,54 @@ public class PaymentManager: NSObject {
             completion(CheckAction.close.rawValue,"","")
         }
         alertView.show()
+    }
+    
+    private func getWalletThatAuthByPayPassword(sceneType:PaySceneType,payModel:PayModel,completion:@escaping (Int,String,String) -> Void) {
+        var pas:String?
+        if (MMSecurityStore.hasWalletThatAuthByPayPassword() ) {
+            pas = MMSecurityStore.getWalletThatAuthByPayPassword(payPassword:payModel.payPassword)
+        } else {
+            if let md5 = WalletManager.getCurrentPayPasswordMD5() {
+                if ( payModel.payPassword.md5 == md5 ) { // 验证通过
+                    completion(CheckAction.success.rawValue,"","")
+                    if ( sceneType == .CreateWallet || sceneType == .CloudBackup ) {
+                        WalletManager.shared.payPasswordForSet = payModel.payPassword
+                    }
+                } else {
+                    completion(CheckAction.fail.rawValue,"","")
+                }
+            } else {
+                completion(CheckAction.success.rawValue,"","")
+            }
+            return
+        }
+        if let value = pas,!value.isEmpty {
+            if sceneType == .CloudBackup || sceneType == .PayPasswordAuth {
+                WalletManager.shared.payPasswordForSet = payModel.payPassword;
+            }
+            completion(CheckAction.success.rawValue,value,"")
+        }else {
+            completion(CheckAction.fail.rawValue,"","")
+        }
+    }
+    
+    private func authByFaceIDOrTouchID(sceneType:PaySceneType,payModel:PayModel,completion:@escaping (Int,String,String) -> Void) {
+        if sceneType == .checkMnemonicWord || sceneType == .AddNewChain || sceneType == .Sign {
+            let model = WalletManager.getWalletModel()
+            if let model = model {
+                let walletJson = WalletManager.modelToStr(model:model) ?? ""
+                completion(CheckAction.success.rawValue,walletJson,"")
+            }else {
+                completion(CheckAction.fail.rawValue,"","")
+            }
+        }else {
+            DeviceInfo.authByFaceIDOrTouchID { e in
+                if let _ = e {
+                    completion(CheckAction.fail.rawValue,"","")
+                } else {
+                    completion(CheckAction.success.rawValue,"","")
+                }
+            }
+        }
     }
 }
