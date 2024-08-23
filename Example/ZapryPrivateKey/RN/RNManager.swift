@@ -212,6 +212,9 @@ extension RNManager {
         case .setPayAuth:
             self.setPayAuth(params: params, resolver: resolver, reject: reject)
             break
+        case .goBackGestureEnabled:
+            self.goBackGestureEnabled(params: params, resolver: resolver, reject: reject)
+            break
         case .requestPayAuth:
             self.requestPayAuth(params: params, resolver: resolver, reject: reject)
             break
@@ -230,28 +233,12 @@ extension RNManager {
             return
         }
         let payType = params["payType"] as? Int ?? 1
-        let payModel = PayModel()
+        var payModel = PayModel()
         //转账
         if let data = params["data"] as? [String:Any] {
-            payModel.chainCode = data["chainCode"] as? String ?? ""
-            payModel.nick = data["nick"] as? String ?? ""
-            payModel.payNum = data["amount"] as? String ?? "0"
-            payModel.to = data["to"] as? String ?? ""
-            payModel.password = data["payPassword"] as? String ?? ""
-
-            if let token = data["token"] as? [String:Any] {
-                payModel.token = token
-            }
-            payModel.signType = data["signType"] as? Int ?? 0
-            if let signData = data["signData"] as? [String:Any] {
-                payModel.signData = signData
-            }
-            if let nftTokenId = data["nftTokenId"] as? String {
-                payModel.nftTokenId = nftTokenId
-            }
-            
-            if let nftName = data["nftName"] as? String {
-                payModel.nftName = nftName
+            let tempModel = JSONUtil.dictionaryToModel(data, PayModel.self)
+            if let model = tempModel {
+                payModel = model
             }
         }
         let sceneType = PaySceneType(rawValue:payType) ?? .none
@@ -273,8 +260,8 @@ extension RNManager {
                         var dict = [String:Any]()
                         dict["mnemonic"] = model?.mnemonic ?? ""
                         if chainCode == "-1" {
-                            if !payModel.password.isEmpty {
-                                WalletManager.shared.payPasswordForSet = payModel.password
+                            if !payModel.payPassword.isEmpty {
+                                WalletManager.shared.payPasswordForSet = payModel.payPassword
                             }
                             let walletDict = JSONUtil.stringToDic(model?.multiWalletInfo)
                             dict["wallet"] = walletDict
@@ -369,6 +356,19 @@ extension RNManager {
                 MMToast.makeToast("Set failed",isError:true, forView: ZapryUtil.keyWindow())
             }
         }
+    }
+    
+    func goBackGestureEnabled(params:[String:Any]?,resolver: RCTPromiseResolveBlock?, reject: RCTPromiseRejectBlock?) {
+        let enable = params?["enabled"] as?Bool ?? true
+        if let view = RNManager.shared.rnVCManager?.navigationController?.interactivePopGestureRecognizer?.view {
+            if let ges = view.gestureRecognizers {
+                for item in ges {
+                    item.isEnabled = enable
+                }
+            }
+        }
+        RNManager.shared.rnVCManager?.view.isUserInteractionEnabled = enable
+        resolver?(true)
     }
 
 }

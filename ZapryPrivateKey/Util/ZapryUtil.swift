@@ -60,4 +60,11 @@ public class ZapryUtil {
            return keyWindow
        }
     }
+    
+    class func sizeOfText(text: String, font: UIFont, maximumWidth: CGFloat) -> CGSize {
+        return text.boundingRect(with:CGSize(width: maximumWidth, height:CGFloat(MAXFLOAT)), options: .usesLineFragmentOrigin, attributes: [.font : font], context:nil).size
+    }
+    class func sizeOfTextByWidth(text: String, font: UIFont, maximumHeight: CGFloat) -> CGSize {
+        return text.boundingRect(with:CGSize(width: CGFloat(MAXFLOAT), height:maximumHeight), options: .usesLineFragmentOrigin, attributes: [.font : font], context:nil).size
+    }
 }

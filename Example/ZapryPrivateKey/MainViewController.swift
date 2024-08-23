@@ -28,6 +28,7 @@ class MainViewController:UIViewController {
         self.deleteWalletBtn.frame = CGRectMake(0.0, CGRectGetMaxY(self.clickBtn.frame) + btnOffsetY, CGRectGetWidth(mainRect), btnHeight)
         
         NotificationCenter.default.addObserver(self, selector:#selector(removeRNVC(notif: )), name:NSNotification.Name("REMOVERNVC"), object:nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(gotoVerifictionTypeVC(notif:)), name: NSNotification.Name("GOTO_SET_VERFICATION_TYPE"), object: nil)
         
         UserConfig.shared.userId = "844097"
         ZapryUtil.shared.setPreferredLanguage(preLan: "zh-Hans")
@@ -42,13 +43,21 @@ class MainViewController:UIViewController {
         self.navigationController?.popToViewController(self, animated: true)
     }
     
+    @objc func gotoVerifictionTypeVC(notif:Notification) {
+        if let userInfo = notif.userInfo,let type = userInfo["type"] as? Int {
+            if type >= 1 {
+                RNManager.shared.pushToSetPayAuth(vc: self, type: VerificationType(rawValue: type) ?? .password, params: ["from":"Setting"])
+            }
+        }
+    }
+    
     @objc func clickBtnCallBack(sender:UIButton) {
         guard let _ = WalletManager.getMultiAddress() else {
             MMToast.makeToast("未创建钱包",isError: true, forView:ZapryUtil.keyWindow())
             return 
         }
         let payModel = PayModel()
-        payModel.payNum = "-0.03"
+        payModel.amount = "-0.03"
         payModel.token = ["token":"ETH"]
         let payScene:PaySceneType = .RechargeToChangePocket
         payModel.signType = payScene.rawValue

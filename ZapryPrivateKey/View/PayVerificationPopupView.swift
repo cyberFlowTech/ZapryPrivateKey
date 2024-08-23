@@ -141,7 +141,7 @@ public class PayVerificationPopupView:UIView {
             title = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_fingerprint_verify")
         }
         self.titleLabel.text = title
-        var payAmount = self.payModel.payNum
+        var payAmount = self.payModel.amount
         let token:[String:Any]? = self.payModel.token
         var payUnit:String = token?["token"] as? String ?? "ETMP"
         if self.paySceneType == .SendRedpacket {

@@ -19,11 +19,11 @@ public enum CheckAction:Int {
 
 @objcMembers
 public class PayModel:NSObject,HandyJSON {
-    public var payNum:String = "0.00"
+    public var amount:String = "0.00"
     public var chainCode:String = ""
     public var nick:String = ""
     public var to:String = ""
-    public var password:String = ""
+    public var payPassword:String = ""
     public var token:[String:Any]?
     public var signType:Int = 0
     public var signData:[String:Any] = [String : Any]()
@@ -55,9 +55,30 @@ public class PaymentManager: NSObject {
         let verificationType = UserConfig.read()
         let window = ZapryUtil.keyWindow()
         if verificationType == .none || verificationType == .denyBiometry || verificationType == .lock {
-            //没设置
-            MMToast.makeToast("没设置支付验证方式", isError: true, forView: window)
-            completion(CheckAction.close.rawValue,"","")
+            let type = DeviceInfo.getDeviceBiometricType()
+            let hasPassword = forceSetPassworld ? true : (type == .none || type == .denyBiometry || type == .lock)
+            
+            let title = ZapryUtil.shared.getZapryLocalizedStringForKey(key:(hasPassword ? "biometric_setting_pay_password" : "biometric_setting_biometric"))
+            let content = ZapryUtil.shared.getZapryLocalizedStringForKey(key: (hasPassword ? "biometric_setting_pay_password_subtitle" : "biometric_setting_biometric_subtitle"))
+            var subContent:String = ""
+            let hasNoWallet = WalletManager.getWalletAddress().count <= 0
+            if hasNoWallet {
+                subContent = ZapryUtil.shared.getZapryLocalizedStringForKey(key:(hasPassword ? "biometric_setting_pay_password_desc": "biometric_setting_biometric_desc"))
+            }
+            let alertView = ZaprySwiftAlertView(title:title, content:content,subContent:subContent, confirmText:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "common_skip"), cancelText:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "common_skip"))
+            alertView.confirmHandle = { v in
+                var verifyType = hasPassword ? 3 : DeviceInfo.getDeviceBiometricType().rawValue
+                NotificationCenter.default.post(name: NSNotification.Name("GOTO_SET_VERFICATION_TYPE"), object: nil, userInfo: ["type":verifyType])
+                completion(CheckAction.close.rawValue,"","")
+            }
+            alertView.cancelHandle = { v in
+                if !hasPassword {
+                    self.checkBeforePayOrSet(hasSet: hasSet,forceSetPassworld: true,sceneType: sceneType,payModel: payModel, completion: completion)
+                    return
+                }
+                completion(CheckAction.close.rawValue,"","")
+            }
+            alertView.show()
         } else {
             if verificationType == .faceID || verificationType == .touchID {
                 let type = DeviceInfo.getDeviceBiometricType()
@@ -70,11 +91,13 @@ public class PaymentManager: NSObject {
             if hasSet {
                 completion(CheckAction.success.rawValue,"","")
             } else {
-//                if WalletManager.getWalletAddress().count <= 0 && sceneType != .CreateWallet {
-//                    completion(CheckAction.close.rawValue,"","")
-//                    //shytodo 打开钱包
-//                    return
-//                }
+                if WalletManager.getWalletAddress().count <= 0 && sceneType != .CreateWallet {
+                    completion(CheckAction.close.rawValue,"","")
+                    //shytodo 打开钱包
+                    completion(CheckAction.close.rawValue,"","")
+//                    RNManager.shared.getWalletVC(navigationVC:UIViewController.getTopNavi())
+                    return
+                }
                 
                 if sceneType == .unBind || sceneType == .checkMnemonicWord || sceneType == .CreateWallet || sceneType == .VerificationBiometic || sceneType == .PayPasswordAuth || sceneType == .AddNewChain || sceneType == .CloudBackup || sceneType == .Sign {
                     var pas:String?
@@ -82,13 +105,13 @@ public class PaymentManager: NSObject {
                         //签证只有faceId或者touchId是无界面的，，密码是有界面的
                         if sceneType != .Sign  {
                             if ( MMSecurityStore.hasWalletThatAuthByPayPassword() ) {
-                                pas = MMSecurityStore.getWalletThatAuthByPayPassword(payPassword:payModel.password)
+                                pas = MMSecurityStore.getWalletThatAuthByPayPassword(payPassword:payModel.payPassword)
                             } else {
                                 if let md5 = WalletManager.getCurrentPayPasswordMD5() {
-                                    if ( payModel.password.md5 == md5 ) { // 验证通过
+                                    if ( payModel.payPassword.md5 == md5 ) { // 验证通过
                                         completion(CheckAction.success.rawValue,"","")
                                         if ( sceneType == .CreateWallet || sceneType == .CloudBackup ) {
-                                            WalletManager.shared.payPasswordForSet = payModel.password
+                                            WalletManager.shared.payPasswordForSet = payModel.payPassword
                                         }
                                     } else {
                                         completion(CheckAction.fail.rawValue,"","")
@@ -100,7 +123,7 @@ public class PaymentManager: NSObject {
                             }
                             if let value = pas,!value.isEmpty {
                                 if sceneType == .CloudBackup || sceneType == .PayPasswordAuth {
-                                    WalletManager.shared.payPasswordForSet = payModel.password;
+                                    WalletManager.shared.payPasswordForSet = payModel.payPassword;
                                 }
                                 completion(CheckAction.success.rawValue,value,"")
                             }else {
