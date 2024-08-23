@@ -20,7 +20,7 @@ public class UserConfig {
     public static let shared = UserConfig()
     public var userId:String = "test"
     public class func read() -> VerificationType {
-        var saveKey:String  = "PaymentVerificationType_\(UserConfig.shared.userId)"
+        let saveKey:String  = "PaymentVerificationType_\(UserConfig.shared.userId)"
         var type = 0
         if let value = UserDefaultsUtil.readObject(key:saveKey) as? Int {
             type = value

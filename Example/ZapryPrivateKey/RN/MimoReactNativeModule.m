@@ -106,13 +106,4 @@ RCT_EXPORT_METHOD(action:(NSString *)action
                                                       userInfo:payload];
 }
 
-#pragma mark - iOS调用RN
-
-//RCT_EXPORT_METHOD(recharge:(NSString *)params) {
-//    [self.bridge enqueueJSCall:@"RCTDeviceEventEmitter"
-//                        method:@"emit"
-//                          args:@[NATIVE_Call_RN_Wallet_Recharge, params]
-//                    completion:NULL];
-//}
-
 @end

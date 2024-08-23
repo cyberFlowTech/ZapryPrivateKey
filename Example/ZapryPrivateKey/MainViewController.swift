@@ -31,8 +31,7 @@ class MainViewController:UIViewController {
         
         UserConfig.shared.userId = "844097"
         ZapryUtil.shared.setPreferredLanguage(preLan: "zh-Hans")
-        let bottom = DeviceInfo.getSafeDistanceBottom()
-        print("shy===>bottom:\(bottom)")
+        self.navigationController?.navigationBar.isHidden = true
     }
     
     deinit {
@@ -78,6 +77,7 @@ class MainViewController:UIViewController {
         }
         WalletManager.deleteWallet()
         UserConfig.save(type: .none)
+        RNManager.shared.closeRNVC()
         MMToast.makeToast("Delete Successful", isError:false, forView: ZapryUtil.keyWindow())
     }
     

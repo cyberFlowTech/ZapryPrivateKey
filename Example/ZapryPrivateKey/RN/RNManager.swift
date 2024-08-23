@@ -59,6 +59,31 @@ enum RNActionName: String {
     case FeedbackGenerator = "FeedbackGenerator"
 }
 
+class RNBaseViewController: UIViewController {
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+    }
+
+    override func willMove(toParentViewController parent: UIViewController?) {
+        super.willMove(toParentViewController: parent)
+        if let parentVC = parent {
+            
+        }else {
+            print("RN:willMove")
+        }
+    }
+
+    override func didMove(toParentViewController parent: UIViewController?) {
+        super.didMove(toParentViewController: parent)
+        if let parentVC = parent {
+            
+        }else {
+            //关闭RN发送事件
+            MimoReactNativeModule.emitEvent(withName: "Notify_Wallet_Exit", andPayload: [:])
+        }
+    }
+}
+
 @objcMembers
 class RNManager: NSObject, RCTBridgeModule, RCTBridgeDelegate {
     var rnInitialProperties:[String: Any]?
@@ -66,7 +91,7 @@ class RNManager: NSObject, RCTBridgeModule, RCTBridgeDelegate {
     var bridge:RCTBridge?
     var completionHandle:((Bool,String,NSError?)->Void)?
     var transferToSSCompletion:((VerificationType)->Void)?
-    var walletSdkRootView:RCTRootView?
+    var rnVCManager:RNBaseViewController?
     
     static func moduleName() -> String! {
         "MimoWalletRnapp"
@@ -84,7 +109,7 @@ class RNManager: NSObject, RCTBridgeModule, RCTBridgeDelegate {
     @objc func rnContentDidAppear(noti:Notification) {
         self.rnDidShowContent = true
         if let properties = self.rnInitialProperties {
-            if let rnRootView = self.walletSdkRootView {
+            if let rnRootView = self.rnVCManager?.view as? RCTRootView {
                 rnRootView.appProperties = properties
             }
         }
@@ -101,18 +126,18 @@ class RNManager: NSObject, RCTBridgeModule, RCTBridgeDelegate {
             self.rnInitialProperties = params
         }
         
-        if(self.walletSdkRootView == nil) {
+        if(self.rnVCManager == nil) {
             NotificationCenter.default.addObserver(self, selector: #selector(rnContentDidAppear(noti:)), name:.RCTContentDidAppear, object: nil)
             let rootView = RCTRootView(bridge:self.getMimoBridge(), moduleName: "MimoWalletRnapp", initialProperties: params)
-            self.walletSdkRootView = rootView
+            let vc = RNBaseViewController()
+            vc.view = rootView
+            self.rnVCManager = vc
         }
-       let vc = UIViewController()
-       vc.view = self.walletSdkRootView
         
-       if let rnRootView = self.walletSdkRootView,page != .backend,self.rnDidShowContent {
-            rnRootView.appProperties = self.rnInitialProperties
-        }
-        return vc
+       if let rnRootView = self.rnVCManager?.view as? RCTRootView,page != .backend,self.rnDidShowContent {
+           rnRootView.appProperties = self.rnInitialProperties
+       }
+       return self.rnVCManager!
     }
     
     
@@ -144,6 +169,16 @@ class RNManager: NSObject, RCTBridgeModule, RCTBridgeDelegate {
         }
         let rnVC = self.getVC(page:page, params: dict)
         vc?.navigationController?.pushViewController(rnVC, animated: true)
+    }
+    
+    func closeRNVC() {
+        if let rnRootView = self.rnVCManager?.view as? RCTRootView {
+            rnRootView.bridge.invalidate()
+        }
+        self.rnVCManager = nil
+        self.rnInitialProperties = nil
+        self.rnDidShowContent = false
+        self.bridge = nil
     }
 }
 
