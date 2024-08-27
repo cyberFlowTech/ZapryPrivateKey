@@ -146,17 +146,6 @@ public class PaymentManager: NSObject {
         var pas:String?
         if (MMSecurityStore.hasWalletThatAuthByPayPassword() ) {
             pas = MMSecurityStore.getWalletThatAuthByPayPassword(payPassword:payModel.payPassword)
-        } else {
-            if let md5 = WalletManager.getCurrentPayPasswordMD5() {
-                if ( payModel.payPassword.md5 == md5 ) { // 验证通过
-                    completion(CheckAction.success.rawValue,"","")
-                } else {
-                    completion(CheckAction.fail.rawValue,"","")
-                }
-            } else {
-                completion(CheckAction.success.rawValue,"","")
-            }
-            return
         }
         if let value = pas,!value.isEmpty {
             completion(CheckAction.success.rawValue,value,"")

@@ -340,7 +340,6 @@ extension RNManager {
             if !payPassword.isEmpty {
                 //shytodo 保存支付密码需求去掉
                 RNManager.shared.payPasswordForSet = payPassword;
-                WalletManager.setCurrentPayPasswordMD5(payPasswordMD5: payPassword.md5)
                 self.transferToSecurityStore(type: type)
                 resolver?(true)
             } else {

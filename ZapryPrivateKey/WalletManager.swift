@@ -33,15 +33,6 @@ public struct WalletModel: Codable {
     public static func setCurrentBackupID(backupID: String) {
         UserDefaultsUtil.saveObject(object: backupID, key: WalletManager.kCurrentBackupID)
     }
-    public static var kCurrentPayPasswordMD5: String {
-        "\(UserConfig.shared.userId)-multi-walletInfo-currnet-PayPasswordMD5"
-    }
-    public static func getCurrentPayPasswordMD5() -> String? {
-        return UserDefaults.standard.value(forKey: WalletManager.kCurrentPayPasswordMD5) as? String
-    }
-    public static func setCurrentPayPasswordMD5(payPasswordMD5: String) {
-        UserDefaultsUtil.saveObject(object: payPasswordMD5, key: WalletManager.kCurrentPayPasswordMD5)
-    }
     
     public static let shared = WalletManager()
     
