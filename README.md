@@ -34,4 +34,5 @@ shy todo
 2.备份到iCloud (payType:12)
 3.设置生物识别的时候验证密码 (payType:10)
 
-4.密码会保存到userDefault上了，这种情况已经废弃掉了
+4.密码会保存到userDefault上了，这种情况已经废弃掉了，已处理
+5.2.8之前的privateKey是存储在UserDefault上的，使用kMultiUdKey来存储的，感觉这种方式可以废弃掉，目前还保留着

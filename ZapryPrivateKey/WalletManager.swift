@@ -18,9 +18,11 @@ public struct WalletModel: Codable {
 
 @objcMembers public class WalletManager: NSObject {
     
+    //shy:由于2.8之前的privateKey是存储在UserDefault上的，所以需要兼容老版本，只获取不存
     public static var kMultiUdKey: String {
         "\(UserConfig.shared.userId)-multi-walletInfo"
     }
+    //shy：2.8之后的非敏感数据address存储在userDefault上的
     public static var kAddressKey: String {
         "\(UserConfig.shared.userId)-multi-walletInfo-address"
     }
