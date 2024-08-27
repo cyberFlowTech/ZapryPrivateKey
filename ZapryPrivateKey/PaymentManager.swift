@@ -150,9 +150,6 @@ public class PaymentManager: NSObject {
             if let md5 = WalletManager.getCurrentPayPasswordMD5() {
                 if ( payModel.payPassword.md5 == md5 ) { // 验证通过
                     completion(CheckAction.success.rawValue,"","")
-                    if ( sceneType == .CreateWallet || sceneType == .CloudBackup ) {
-                        WalletManager.shared.payPasswordForSet = payModel.payPassword
-                    }
                 } else {
                     completion(CheckAction.fail.rawValue,"","")
                 }
@@ -162,9 +159,6 @@ public class PaymentManager: NSObject {
             return
         }
         if let value = pas,!value.isEmpty {
-            if sceneType == .CloudBackup || sceneType == .PayPasswordAuth {
-                WalletManager.shared.payPasswordForSet = payModel.payPassword;
-            }
             completion(CheckAction.success.rawValue,value,"")
         }else {
             completion(CheckAction.fail.rawValue,"","")
@@ -172,22 +166,12 @@ public class PaymentManager: NSObject {
     }
     
     private func authByFaceIDOrTouchID(sceneType:PaySceneType,payModel:PayModel,completion:@escaping (Int,String,String) -> Void) {
-        if sceneType == .checkMnemonicWord || sceneType == .AddNewChain || sceneType == .Sign {
-            let model = WalletManager.getWalletModel()
-            if let model = model {
-                let walletJson = WalletManager.modelToStr(model:model) ?? ""
-                completion(CheckAction.success.rawValue,walletJson,"")
-            }else {
-                completion(CheckAction.fail.rawValue,"","")
-            }
+        let model = WalletManager.getWalletModel(password: "")
+        if let model = model {
+            let walletJson = WalletManager.modelToStr(model:model) ?? ""
+            completion(CheckAction.success.rawValue,walletJson,"")
         }else {
-            DeviceInfo.authByFaceIDOrTouchID { e in
-                if let _ = e {
-                    completion(CheckAction.fail.rawValue,"","")
-                } else {
-                    completion(CheckAction.success.rawValue,"","")
-                }
-            }
+            completion(CheckAction.fail.rawValue,"","")
         }
     }
 }

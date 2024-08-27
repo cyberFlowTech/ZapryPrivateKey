@@ -44,9 +44,8 @@ public struct WalletModel: Codable {
     }
     
     public static let shared = WalletManager()
-    public  var payPasswordForSet: String? // 仅仅用于写时加密，避免写时还需要用户输入密码。其它场景不要用，也不要保存到DB、文件、keychain中。
     
-    public static func getWalletModel() -> WalletModel? { // 注意如果是支付密码方式，需要有密码
+    public static func getWalletModel(password:String) -> WalletModel? { // 注意如果是支付密码方式，需要有密码
         var model: WalletModel? = nil
         let type = UserConfig.read()
         switch type {
@@ -55,7 +54,7 @@ public struct WalletModel: Codable {
                 model = WalletManager.stringToModel(s: s)
             }
         case .password:
-            if let s = MMSecurityStore.getWalletThatAuthByPayPassword(payPassword: WalletManager.shared.payPasswordForSet ?? "") {
+            if let s = MMSecurityStore.getWalletThatAuthByPayPassword(payPassword:password) {
                 model = WalletManager.stringToModel(s: s)
             }
         case .none,.denyBiometry,.lock:
@@ -72,21 +71,21 @@ public struct WalletModel: Codable {
         return ks.contains(c)
     }
     
-    public static func saveWallet(mnemonic: String, multiWalletInfo: [String: Any]) -> Bool {
+    public static func saveWallet(mnemonic: String, multiWalletInfo: [String: Any],password:String) -> Bool {
         guard let info = JSONUtil.dicToJsonString(dic: multiWalletInfo) else { return false }
         var model = WalletModel()
         model.mnemonic = mnemonic
         model.multiWalletInfo = info
         let type = UserConfig.read()
-        return WalletManager.saveModelToSecurityStore(model: model, targetType: type)
+        return WalletManager.saveModelToSecurityStore(model: model, targetType: type,password: password)
     }
     
-    public static func transferToSecurityStoreIfNeeded(targetType: VerificationType, walletModel:WalletModel?) -> Bool { // 如果安全存储中没有，会从旧存储中读取并迁移到安全存储中
+    public static func transferToSecurityStoreIfNeeded(targetType: VerificationType, walletModel:WalletModel?,password:String) -> Bool { // 如果安全存储中没有，会从旧存储中读取并迁移到安全存储中
         var model:WalletModel?
         if let walletModel = walletModel {
             model = walletModel
         }else {
-            model = WalletManager.getWalletModel()
+            model = WalletManager.getWalletModel(password:password)
         }
         if ( model == nil ) {
             if let s = UserDefaults.standard.value(forKey: WalletManager.kMultiUdKey) as? String {
@@ -97,7 +96,7 @@ public struct WalletModel: Codable {
         model?.accountAddress = ""
         model?.accountPrivateKey = ""
         if let m = model {
-            if ( WalletManager.saveModelToSecurityStore(model: m, targetType: targetType) ) {
+            if ( WalletManager.saveModelToSecurityStore(model: m, targetType: targetType,password: password) ) {
                 return true
             }
         } else {
@@ -108,7 +107,7 @@ public struct WalletModel: Codable {
         return false
     }
     
-    public static func saveModelToSecurityStore(model: WalletModel, targetType: VerificationType) -> Bool {
+    public static func saveModelToSecurityStore(model: WalletModel, targetType: VerificationType,password:String) -> Bool {
         UserDefaultsUtil.saveObject(object: "", key: WalletManager.kAddressKey)
         var success = false
         let encoder = JSONEncoder()
@@ -121,7 +120,8 @@ public struct WalletModel: Codable {
                 _ = MMSecurityStore.deleteWalletThatAuthByPayPassword()
             }
         case .password:
-            success = MMSecurityStore.setWalletThatAuthByPayPassword(walletInfo: modelStr, payPassword: WalletManager.shared.payPasswordForSet ?? "")
+            //shytodo 保存支付密码需求去掉
+            success = MMSecurityStore.setWalletThatAuthByPayPassword(walletInfo: modelStr, payPassword:password)
             if ( success ) {
                 _ = MMSecurityStore.deleteWalletThatAuthByBiometric()
             }
@@ -140,8 +140,8 @@ public struct WalletModel: Codable {
         return success
     }
     
-    public static func backupCurrentWallet(backupPassword: String) -> String? {
-        let model = WalletManager.getWalletModel()
+    public static func backupCurrentWallet(backupPassword: String,password:String) -> String? {
+        let model = WalletManager.getWalletModel(password: password)
         if let m = model?.mnemonic {
             if let backupID = MMSecurityStore.saveWalletThatAuthByBackupPassword(walletInfo: m, backupPassword: backupPassword) {
                 WalletManager.setCurrentBackupID(backupID: backupID)
@@ -152,9 +152,9 @@ public struct WalletModel: Codable {
     }
 
     // RN还在用，先保留一段时间吧，后面要删掉了，尽量不要使用
-    public static func getWalletInfo(chainCode: String) -> [String: Any]? {
+    public static func getWalletInfo(chainCode: String,password:String) -> [String: Any]? {
         var result: [String: Any] = [:]
-        if let model = WalletManager.getWalletModel() {
+        if let model = WalletManager.getWalletModel(password: password) {
             let multi = model.multiWalletInfo
             guard let info = JSONUtil.stringToDic(multi) else {
                 return nil

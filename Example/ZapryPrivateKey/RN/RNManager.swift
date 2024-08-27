@@ -92,6 +92,8 @@ class RNManager: NSObject, RCTBridgeModule, RCTBridgeDelegate {
     var completionHandle:((Bool,String,NSError?)->Void)?
     var transferToSSCompletion:((VerificationType)->Void)?
     var rnVCManager:RNBaseViewController?
+    //shytodo 临时暂放这里，后期需要去掉
+    var payPasswordForSet: String?
     
     static func moduleName() -> String! {
         "MimoWalletRnapp"
@@ -242,6 +244,11 @@ extension RNManager {
             }
         }
         let sceneType = PaySceneType(rawValue:payType) ?? .none
+        let verificationType = UserConfig.read()
+        let whiteList:[PaySceneType] = [.CloudBackup,.PayPasswordAuth,.CreateWallet]
+        if verificationType == .password && (whiteList.contains(sceneType)) {
+            RNManager.shared.payPasswordForSet = payModel.payPassword
+        }
         PaymentManager.shared.checkBeforePay(sceneType:sceneType.rawValue, payModel: payModel) {[weak self] action,result, error in
             let checkAction = CheckAction(rawValue: action)
             if checkAction == .success {
@@ -260,8 +267,9 @@ extension RNManager {
                         var dict = [String:Any]()
                         dict["mnemonic"] = model?.mnemonic ?? ""
                         if chainCode == "-1" {
+                            //shytodo 保存支付密码需求去掉
                             if !payModel.payPassword.isEmpty {
-                                WalletManager.shared.payPasswordForSet = payModel.payPassword
+                                RNManager.shared.payPasswordForSet = payModel.payPassword
                             }
                             let walletDict = JSONUtil.stringToDic(model?.multiWalletInfo)
                             dict["wallet"] = walletDict
@@ -269,7 +277,6 @@ extension RNManager {
                             dict["wallet"] = ["address":model?.accountAddress ?? "" ,
                                               "privateKey":model?.accountPrivateKey ?? ""]
                         }
-                        
                         resolver?(dict)
                     }else {
                         resolver?(true)
@@ -281,7 +288,6 @@ extension RNManager {
                     let err = NSError(domain: "Error", code: PaymentManager.ERROR_CODE_PASSWORD_FAILED, userInfo:[NSLocalizedDescriptionKey:errTip])
                     self?.completionHandle?(false,"",err)
                 }
-                let verificationType = UserConfig.read()
                 var code:Int = -1
                 if verificationType == .faceID || verificationType == .touchID {
                     code = PaymentManager.ERROR_CODE_BIOMETRIC_FAILED
@@ -302,7 +308,8 @@ extension RNManager {
             reject?("-1", "", nil)
             return
         }
-        if ( WalletManager.saveWallet(mnemonic: mnemonic, multiWalletInfo: wallet) ) {
+        let password = RNManager.shared.payPasswordForSet ?? ""
+        if ( WalletManager.saveWallet(mnemonic: mnemonic, multiWalletInfo: wallet,password:password) ) {
             if let extData = params["extData"] as? [String: Any], let backupID = extData["backupId"] as? String {
                 WalletManager.setCurrentBackupID(backupID: backupID)
             }
@@ -331,7 +338,8 @@ extension RNManager {
         }else if type == 3 {
             let payPassword = params?["payPassword"] as? String ?? ""
             if !payPassword.isEmpty {
-                WalletManager.shared.payPasswordForSet = payPassword;
+                //shytodo 保存支付密码需求去掉
+                RNManager.shared.payPasswordForSet = payPassword;
                 WalletManager.setCurrentPayPasswordMD5(payPasswordMD5: payPassword.md5)
                 self.transferToSecurityStore(type: type)
                 resolver?(true)
@@ -347,7 +355,8 @@ extension RNManager {
         if let completion = self.transferToSSCompletion {
             completion(verificationType)
         }else {
-            let success = WalletManager.transferToSecurityStoreIfNeeded(targetType: verificationType,walletModel: nil)
+            let password = RNManager.shared.payPasswordForSet ?? ""
+            let success = WalletManager.transferToSecurityStoreIfNeeded(targetType: verificationType,walletModel: nil,password: password)
             if success {
                 UserConfig.save(type:verificationType)
             }else {
