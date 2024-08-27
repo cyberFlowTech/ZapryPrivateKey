@@ -29,7 +29,7 @@ TODO: Add long description of the pod here.
   s.swift_version = '5.0'
   s.requires_arc = true
   s.ios.deployment_target = '13.0'
-  s.source_files =  "ZapryPrivateKey/**/*.swift"
+  s.source_files =  "ZapryPrivateKey/**/*.{swift,h,m}"
   s.resource = "ZapryPrivateKey/ZapryPrivateKey.bundle"
 
   s.dependency 'KeychainAccess', '~> 4.2.2'

@@ -54,14 +54,13 @@ public class PaymentManager: NSObject {
     func checkBeforePayOrSet(hasSet:Bool,forceSetPassworld:Bool = false, sceneType:PaySceneType = .none,payModel:PayModel = PayModel(),completion:@escaping (Int,String,String) -> Void) {
         let verificationType = UserConfig.read()
         let window = ZapryUtil.keyWindow()
-        if verificationType == .none || verificationType == .denyBiometry || verificationType == .lock {
+        if verificationType.rawValue <= 0 {
             //获取异常的处理
             self.showAlertByNoSetVerifityType(hasSet: hasSet, forceSetPassworld:forceSetPassworld, sceneType:sceneType, payModel: payModel, completion: completion)
         } else {
             if verificationType == .faceID || verificationType == .touchID {
                 let type = DeviceInfo.getDeviceBiometricType()
                 if type == .none || type == .denyBiometry || type == .lock {
-
                     MMToast.makeToast(ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_disabler_tip"), isError: true, forView: window)
                     return
                 }
