@@ -135,7 +135,7 @@ public struct WalletModel: Codable {
             }
         case .none,.denyBiometry,.lock:
             let window = ZapryUtil.keyWindow()
-            MMToast.makeToast(ZapryUtil.shared.getZapryLocalizedStringForKey(key: "save_wallet_error"),isError: true, forView:window)
+            MMToast.makeToast(ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_setting_save_wallet"),isError: true, forView:window)
         }
         if ( success ) {
             if let adds = WalletManager.getMultiAddressFromModel(model: model) { // 非敏感信息单独存储，不需要密码验证就可以使用
