@@ -121,8 +121,8 @@ class RNManager: NSObject, RCTBridgeModule, RCTBridgeDelegate {
         //没有设置支付验证，需要跳转到设置去处理
         let json = "{\"version\":\"88888888\",\"newcomer\":true,\"api\":\"i_1681907958\",\"user\":{\"remarks\":\"\",\"nick\":\"MIMO3071\",\"open_fun\":false,\"nft_name\":\"\",\"age\":\"\",\"isTodayFirst\":false,\"is_friend\":0,\"flag\":0,\"u_conf\":{\"friend_verify\":0,\"cover\":\"https:\\/\\/infras-test.S3.ap-southeast-1.amazonaws.com\\/\\/571D6E36-9E35-4AB4-8B83-13C959C311F2.png\",\"strange_msg\":false,\"dynamic_show\":1,\"notice_type\":0,\"lan\":\"zh_CN\",\"nft_set\":0,\"is_search\":1,\"asset\":1},\"user_type\":70,\"active_time\":\"\",\"pay_pwd\":\"\",\"user_id\":\"844097\",\"sex\":\"0\",\"is_general\":0,\"level\":\"\",\"is_focus\":0,\"origin_avatar\":\"https:\\/\\/infras-test.S3.ap-southeast-1.amazonaws.com\\/\\/5C297570-C1B7-4DBC-9ACA-F742C3BF3BD6.png\",\"ipfs_host\":\"\",\"sessid\":\"\",\"status\":\"\",\"is_pwd\":1,\"isRegister\":false,\"address\":\"0x970752d063cb75f10c5b304b4de4cfc61c6eec92\",\"avatar\":\"https:\\/\\/infras-test.S3.ap-southeast-1.amazonaws.com\\/\\/5C297570-C1B7-4DBC-9ACA-F742C3BF3BD6.png\",\"is_block\":0,\"is_fission\":\"\",\"focus\":3,\"reg_time\":\"0\",\"in_book\":0,\"fans\":1,\"hasWallet\":false,\"block\":0,\"phrase\":\"\",\"desc\":\"来咯女t狗狗哈哈哈哈太开心我现在还以为他就是个笑话来的吗哈拉哈河解决不知道自己到底有没有事情想要想要自己解决任何办法就是没有理由想好起来也没有任何时候不要因为不在意自己做自己的选择和借口去面对任何一位不同阶段或者别人认为别人做事情做不到位事情发生了一些不好事情要不就是不要\"},\"uuid\":\"D2C3900A-FDD3-475B-AA35-E261CEF59B61\",\"supportLangs\":[\"en\",\"ko\",\"zh-Hans\",\"zh-Hant\",\"vi\",\"ja\",\"mn\",\"th\"],\"lan\":\"zh_CN\",\"sign_time\":\"1724308391\",\"user_id\":\"844097\",\"sessid\":\"c4ca72724336ba0d098bf39ee337f499\",\"version_code\":\"123456\",\"env\":\"development\",\"securityKey\":\"*&^%as#$@T@%\",\"authType\":-1,\"baseUrl\":\"https:\\/\\/mimo-test.mimo.immo\\/\",\"screen\":\"Home\",\"supportAuthType\":3}"
        
-       var params = JSONUtil.stringToDic(json)
-       let biometricType = DeviceInfo.getDeviceBiometricType()
+       var params = ZapryJSONUtil.stringToDic(json)
+       let biometricType = ZapryDeviceInfo.getDeviceBiometricType()
        params?["supportAuthType"] = (biometricType == .none || biometricType == .denyBiometry || biometricType == .lock) ? VerificationType.password.rawValue : biometricType.rawValue
         if page != .backend {
             self.rnInitialProperties = params
@@ -193,7 +193,7 @@ extension RNManager {
             return
         }
         print("shy==>action:\(action),\(params)")
-        let data = JSONUtil.stringToDic(params)
+        let data = ZapryJSONUtil.stringToDic(params)
         DispatchQueue.main.async {
             RNManager.shared.rnAction(action: action,
                                       param1: "",
@@ -238,23 +238,23 @@ extension RNManager {
         var payModel = PayModel()
         //转账
         if let data = params["data"] as? [String:Any] {
-            let tempModel = JSONUtil.dictionaryToModel(data, PayModel.self)
+            let tempModel = ZapryJSONUtil.dictionaryToModel(data, PayModel.self)
             if let model = tempModel {
                 payModel = model
             }
         }
         let sceneType = PaySceneType(rawValue:payType) ?? .none
-        let verificationType = PaymentManager.shared.getPaymentVerificationMethod()
+        let verificationType = ZapryPrivateKeyHelper.shared.getPaymentVerificationMethod()
         let whiteList:[PaySceneType] = [.CloudBackup,.PayPasswordAuth,.CreateWallet]
         if verificationType == .password && (whiteList.contains(sceneType)) {
             RNManager.shared.payPasswordForSet = payModel.payPassword
         }
-        PaymentManager.shared.checkBeforePay(sceneType:sceneType.rawValue, payModel: payModel) {[weak self] action,result, error in
+        ZapryPrivateKeyHelper.shared.checkBeforePay(sceneType:sceneType.rawValue, payModel: payModel) {[weak self] action,result, error in
             let checkAction = CheckAction(rawValue: action)
             if checkAction == .success {
                 if sceneType == .checkMnemonicWord {
                     var dict = [String:Any]()
-                    let model = WalletManager.stringToModel(s: result)
+                    let model = ZapryWalletManager.stringToModel(s: result)
                     dict["mnemonic"] = model?.mnemonic
                     resolver?(dict)
                 }else if sceneType == .PayPasswordAuth {
@@ -263,7 +263,7 @@ extension RNManager {
                 } else {
                     let chainCode = payModel.chainCode
                     if !chainCode.isEmpty{
-                        let model = WalletManager.stringToModel(s: result,chainCode: chainCode)
+                        let model = ZapryWalletManager.stringToModel(s: result,chainCode: chainCode)
                         var dict = [String:Any]()
                         dict["mnemonic"] = model?.mnemonic ?? ""
                         if chainCode == "-1" {
@@ -271,7 +271,7 @@ extension RNManager {
                             if !payModel.payPassword.isEmpty {
                                 RNManager.shared.payPasswordForSet = payModel.payPassword
                             }
-                            let walletDict = JSONUtil.stringToDic(model?.multiWalletInfo)
+                            let walletDict = ZapryJSONUtil.stringToDic(model?.multiWalletInfo)
                             dict["wallet"] = walletDict
                         }else {
                             dict["wallet"] = ["address":model?.accountAddress ?? "" ,
@@ -285,14 +285,14 @@ extension RNManager {
             }else {
                 if sceneType == .PayPasswordAuth {
                     let errTip = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "verification_failed_tip")
-                    let err = NSError(domain: "Error", code: PaymentManager.ERROR_CODE_PASSWORD_FAILED, userInfo:[NSLocalizedDescriptionKey:errTip])
+                    let err = NSError(domain: "Error", code: ZapryPrivateKeyHelper.ERROR_CODE_PASSWORD_FAILED, userInfo:[NSLocalizedDescriptionKey:errTip])
                     self?.completionHandle?(false,"",err)
                 }
                 var code:Int = -1
                 if verificationType == .faceID || verificationType == .touchID {
-                    code = PaymentManager.ERROR_CODE_BIOMETRIC_FAILED
+                    code = ZapryPrivateKeyHelper.ERROR_CODE_BIOMETRIC_FAILED
                 }else if verificationType == .password {
-                    code = PaymentManager.ERROR_CODE_PASSWORD_FAILED
+                    code = ZapryPrivateKeyHelper.ERROR_CODE_PASSWORD_FAILED
                 }
                 reject?(String(code),"",nil)
             }
@@ -313,7 +313,7 @@ extension RNManager {
             backupID = buID
         }
         let password = RNManager.shared.payPasswordForSet ?? ""
-        PaymentManager.shared.setMultiWalletInfo(mnemonic: mnemonic, wallet: wallet, password: password, backupID: backupID) { result, msg in
+        ZapryPrivateKeyHelper.shared.setMultiWalletInfo(mnemonic: mnemonic, wallet: wallet, password: password, backupID: backupID) { result, msg in
             if result {
                 resolver?("0")
             }else {
@@ -336,7 +336,7 @@ extension RNManager {
         if !password.isEmpty {
             RNManager.shared.payPasswordForSet = password
         }
-        PaymentManager.shared.setPayAuth(type: type, password:password,isSaveWallet:isSaveWallet) { result, msg in
+        ZapryPrivateKeyHelper.shared.setPayAuth(type: type, password:password,isSaveWallet:isSaveWallet) { result, msg in
             if result{
                 if let completion = self.transferToSSCompletion {
                     completion(VerificationType(rawValue: type) ?? .none)

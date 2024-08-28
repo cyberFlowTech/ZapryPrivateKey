@@ -1,5 +1,5 @@
 //
-//  ZaprySwiftAlertView.swift
+//  ZapryAlertView.swift
 //  MIMO
 //
 //  Created by zhang shuai on 2023/7/6.
@@ -8,7 +8,7 @@
 import UIKit
 
 @objcMembers
-public class ZaprySwiftAlertView: UIView {
+public class ZapryAlertView: UIView {
     
     var titleText: String?
     var contentText: String?
@@ -16,8 +16,8 @@ public class ZaprySwiftAlertView: UIView {
     var cancelText: String?
     var subContentText: String?
     
-    public var cancelHandle: ((_ alertView: ZaprySwiftAlertView) -> Void)?
-    public var confirmHandle: ((_ alertView: ZaprySwiftAlertView) -> Void)?
+    public var cancelHandle: ((_ alertView: ZapryAlertView) -> Void)?
+    public var confirmHandle: ((_ alertView: ZapryAlertView) -> Void)?
     
    public init(title: String, content: String, confirmText: String? = "Confirm", cancelText: String? = "Cancel") {
         

@@ -1,5 +1,5 @@
 //
-//  DeviceUtil.swift
+//  ZapryDeviceInfo.swift
 //  MIMO
 //
 //  Created by zhang shuai on 2023/4/7.
@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 import LocalAuthentication
 
-public class DeviceInfo {
+public class ZapryDeviceInfo {
     
     public static var idfv: String {
         return UIDevice.current.identifierForVendor?.uuidString ?? ""
@@ -17,16 +17,6 @@ public class DeviceInfo {
     
     public static var systemVersion: String {
         return UIDevice.current.systemVersion
-    }
-    
-    public static func isSmallDevice() -> Bool {
-        var isSmall = false
-        let screenSize = UIScreen.main.bounds.size
-        let safeHeight = Self.getSafeDistanceBottom()
-        if screenSize.width <= 750 && safeHeight == 0 {
-            isSmall = true
-        }
-        return isSmall
     }
     
     public static func testAuthByFaceIDOrTouchID() -> NSError? {
@@ -42,7 +32,7 @@ public class DeviceInfo {
     }
     
     public static func authByFaceIDOrTouchID(comp: @escaping (NSError?) -> Void) {
-        let test = DeviceInfo.testAuthByFaceIDOrTouchID()
+        let test = ZapryDeviceInfo.testAuthByFaceIDOrTouchID()
         if ( test != nil ) {
             DispatchQueue.main.async {
                 comp(test)
@@ -82,12 +72,6 @@ public class DeviceInfo {
             return .faceID
         default:
             return .none
-        }
-    }
-    
-    public static func gotoSetting() {
-        if let faceIdUrl = URL(string: "App-Prefs://") {
-            UIApplication.shared.open(faceIdUrl)
         }
     }
     

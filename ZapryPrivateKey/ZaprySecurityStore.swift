@@ -1,5 +1,5 @@
 //
-//  MMSecurityStore.swift
+//  ZaprySecurityStore.swift
 //  MIMO
 //
 //  Created by jazohuang on 2024/3/5.
@@ -10,7 +10,7 @@ import Security
 import LocalAuthentication
 import CryptoSwift
 
-@objcMembers public class MMSecurityStore : NSObject {
+@objcMembers public class ZaprySecurityStore : NSObject {
     
     ///
     /// 安全的生物识别验证的钱包
@@ -20,30 +20,30 @@ import CryptoSwift
     ///
     private static let biometric_wallet_item = "biometric.web3wallet.zapry.net"
     static func setWalletThatAuthByBiometric(walletInfo: String) -> Bool {
-        let uid = PaymentManager.shared.getUserIdFromOptions()
+        let uid = ZapryPrivateKeyHelper.shared.getUserIdFromOptions()
         if ( uid.count <= 0 || walletInfo.count <= 0 ) { return false }
-        guard let data = MMSecurityStore.biometricEncode(walletInfo: walletInfo, key: MMSecurityStore.randomPassword(length: 64)) else { return false }
-        guard let query = MMSecurityStore.biometricSetDic(uid: uid, server: MMSecurityStore.biometric_wallet_item, data: data) else { return false }
-        return MMSecurityStore.setSSItem(query: query)
+        guard let data = ZaprySecurityStore.biometricEncode(walletInfo: walletInfo, key: ZaprySecurityStore.randomPassword(length: 64)) else { return false }
+        guard let query = ZaprySecurityStore.biometricSetDic(uid: uid, server: ZaprySecurityStore.biometric_wallet_item, data: data) else { return false }
+        return ZaprySecurityStore.setSSItem(query: query)
     }
     static func getWalletThatAuthByBiometric() -> String? {
-        let uid = PaymentManager.shared.getUserIdFromOptions()
+        let uid = ZapryPrivateKeyHelper.shared.getUserIdFromOptions()
         if ( uid.count <= 0 ) { return nil }
-        let query = MMSecurityStore.biometricGetDic(uid: uid, server: MMSecurityStore.biometric_wallet_item)
-        if let data = MMSecurityStore.getSSItem(query: query) {
-            return MMSecurityStore.biometricDecode(data: data)
+        let query = ZaprySecurityStore.biometricGetDic(uid: uid, server: ZaprySecurityStore.biometric_wallet_item)
+        if let data = ZaprySecurityStore.getSSItem(query: query) {
+            return ZaprySecurityStore.biometricDecode(data: data)
         }
         return nil
     }
     static func deleteWalletThatAuthByBiometric() -> Bool {
-        let uid = PaymentManager.shared.getUserIdFromOptions()
+        let uid = ZapryPrivateKeyHelper.shared.getUserIdFromOptions()
         if ( uid.count <= 0 ) { return false }
-        let query = MMSecurityStore.biometricGetDic(uid: uid, server: MMSecurityStore.biometric_wallet_item)
-        return MMSecurityStore.deleteSSItem(query: query)
+        let query = ZaprySecurityStore.biometricGetDic(uid: uid, server: ZaprySecurityStore.biometric_wallet_item)
+        return ZaprySecurityStore.deleteSSItem(query: query)
     }
     private static func biometricEncode(walletInfo: String, key: String) -> Data? {
         if ( key.count <= 0 ) { return nil }
-        guard let WK = MMSecurityStore.encrypt(value: walletInfo, key: key) else { return nil }
+        guard let WK = ZaprySecurityStore.encrypt(value: walletInfo, key: key) else { return nil }
         let RK = key
         let item = "\(RK)|\(WK)" // 其实这里的RK和encrypt不是必要的，仅仅提高了一点点门槛
         guard let data = item.data(using: .utf8) else { return nil }
@@ -55,7 +55,7 @@ import CryptoSwift
         if ( cs.count != 2 ) { return nil }
         let key = cs[0]
         let value = cs[1]
-        return MMSecurityStore.decrypt(encryptValue: value, key: key)
+        return ZaprySecurityStore.decrypt(encryptValue: value, key: key)
     }
     private static func randomPassword(length: Int) -> String {
         var bytes = Data(count: length)
@@ -76,7 +76,7 @@ import CryptoSwift
         return access
     }
     private static func biometricSetDic(uid: String, server: String, data: Data) -> Dictionary<String,Any>? {
-        guard let access = MMSecurityStore.biometricItemAccess() else { return nil }
+        guard let access = ZaprySecurityStore.biometricItemAccess() else { return nil }
         let context = LAContext()
         context.localizedReason = "Access your password on the keychain"
         return [kSecClass as String: kSecClassInternetPassword,
@@ -107,39 +107,39 @@ import CryptoSwift
     ///
     private static let pay_password_wallet_item = "pay.web3wallet.zapry.net"
     static func setWalletThatAuthByPayPassword(walletInfo: String, payPassword: String) -> Bool {
-        let uid = PaymentManager.shared.getUserIdFromOptions()
+        let uid = ZapryPrivateKeyHelper.shared.getUserIdFromOptions()
         if ( uid.count <= 0 || walletInfo.count <= 0 || payPassword.count < 6 ) { return false }
-        guard let data = MMSecurityStore.payPasswordEncode(walletInfo: walletInfo, payPassword: payPassword) else { return false }
-        guard let query = MMSecurityStore.payPasswordSetDic(uid: uid, server: MMSecurityStore.pay_password_wallet_item, data: data) else { return false }
-        return MMSecurityStore.setSSItem(query: query)
+        guard let data = ZaprySecurityStore.payPasswordEncode(walletInfo: walletInfo, payPassword: payPassword) else { return false }
+        guard let query = ZaprySecurityStore.payPasswordSetDic(uid: uid, server: ZaprySecurityStore.pay_password_wallet_item, data: data) else { return false }
+        return ZaprySecurityStore.setSSItem(query: query)
     }
     static func getWalletThatAuthByPayPassword(payPassword: String) -> String? {
-        let uid = PaymentManager.shared.getUserIdFromOptions()
+        let uid = ZapryPrivateKeyHelper.shared.getUserIdFromOptions()
         if ( uid.count <= 0 || payPassword.count < 6 ) { return nil }
-        let query = MMSecurityStore.payPasswordGetDic(uid: uid, server: MMSecurityStore.pay_password_wallet_item)
-        if let data = MMSecurityStore.getSSItem(query: query) {
-            return MMSecurityStore.payPasswordDecode(data: data, payPassword: payPassword)
+        let query = ZaprySecurityStore.payPasswordGetDic(uid: uid, server: ZaprySecurityStore.pay_password_wallet_item)
+        if let data = ZaprySecurityStore.getSSItem(query: query) {
+            return ZaprySecurityStore.payPasswordDecode(data: data, payPassword: payPassword)
         }
         return nil
     }
     static func hasWalletThatAuthByPayPassword() -> Bool {
-        let uid = PaymentManager.shared.getUserIdFromOptions()
+        let uid = ZapryPrivateKeyHelper.shared.getUserIdFromOptions()
         if ( uid.count <= 0 ) { return false }
-        let query = MMSecurityStore.payPasswordGetDic(uid: uid, server: MMSecurityStore.pay_password_wallet_item)
-        if let data = MMSecurityStore.getSSItem(query: query) {
+        let query = ZaprySecurityStore.payPasswordGetDic(uid: uid, server: ZaprySecurityStore.pay_password_wallet_item)
+        if let data = ZaprySecurityStore.getSSItem(query: query) {
             return true
         }
         return false
     }
     static func deleteWalletThatAuthByPayPassword() -> Bool {
-        let uid = PaymentManager.shared.getUserIdFromOptions()
+        let uid = ZapryPrivateKeyHelper.shared.getUserIdFromOptions()
         if ( uid.count <= 0 ) { return false }
-        let query = MMSecurityStore.payPasswordGetDic(uid: uid, server: MMSecurityStore.pay_password_wallet_item)
-        return MMSecurityStore.deleteSSItem(query: query)
+        let query = ZaprySecurityStore.payPasswordGetDic(uid: uid, server: ZaprySecurityStore.pay_password_wallet_item)
+        return ZaprySecurityStore.deleteSSItem(query: query)
     }
     private static func payPasswordEncode(walletInfo: String, payPassword: String) -> Data? {
         if ( payPassword.count <= 0 ) { return nil }
-        guard let WK = MMSecurityStore.encrypt(value: walletInfo, key: payPassword) else { return nil }
+        guard let WK = ZaprySecurityStore.encrypt(value: walletInfo, key: payPassword) else { return nil }
         let IK = payPassword.md5
         let item = "\(IK)|\(WK)"
         guard let data = item.data(using: .utf8) else { return nil }
@@ -152,7 +152,7 @@ import CryptoSwift
         let IK = cs[0]
         let WK = cs[1]
         if ( payPassword.md5() != IK ) { return nil } // 身份验证不通过
-        return MMSecurityStore.decrypt(encryptValue: WK, key: payPassword)
+        return ZaprySecurityStore.decrypt(encryptValue: WK, key: payPassword)
     }
     private static func payPasswordSetDic(uid: String, server: String, data: Data) -> Dictionary<String,Any>? {
         return [kSecClass as String: kSecClassInternetPassword,
@@ -185,36 +185,36 @@ import CryptoSwift
         if ( walletInfo.count <= 0 || backupPassword.count < 6 ) { return nil }
         let date = Date.init(timeIntervalSinceNow: 0).timeIntervalSince1970
         let timeString = String.init(format: "%.f", date)
-        let backupID = "\(timeString).\(MMSecurityStore.backup_password_wallet_item)"
-        guard let data = MMSecurityStore.backupEncode(walletInfo: walletInfo, backupPassword: backupPassword) else { return nil }
-        guard let query = MMSecurityStore.backupSetDic(server: backupID, data: data) else { return nil }
-        if ( MMSecurityStore.setSSItem(query: query) ) {
+        let backupID = "\(timeString).\(ZaprySecurityStore.backup_password_wallet_item)"
+        guard let data = ZaprySecurityStore.backupEncode(walletInfo: walletInfo, backupPassword: backupPassword) else { return nil }
+        guard let query = ZaprySecurityStore.backupSetDic(server: backupID, data: data) else { return nil }
+        if ( ZaprySecurityStore.setSSItem(query: query) ) {
             return backupID
         }
         return nil
     }
     static func getWalletThatAuthByBackupPassword(backupID: String, backupPassword: String) throws -> String {
-        let query = MMSecurityStore.backupGetDic(server: backupID)
-        guard let data = MMSecurityStore.getSSItem(query: query) else {
+        let query = ZaprySecurityStore.backupGetDic(server: backupID)
+        guard let data = ZaprySecurityStore.getSSItem(query: query) else {
             throw MMSecurityStoreError.queryError
         }
         if let WK = String(data: data, encoding: .utf8) {
-            return try MMSecurityStore.decryptWithThrows(encryptValue: WK, key: backupPassword)
+            return try ZaprySecurityStore.decryptWithThrows(encryptValue: WK, key: backupPassword)
         } else {
             throw MMSecurityStoreError.encodeError
         }
     }
     static func deleteWalletThatAuthByBackupPassword(backupID: String) -> Bool {
-        let query = MMSecurityStore.backupGetDic(server: backupID)
-        return MMSecurityStore.deleteSSItem(query: query)
+        let query = ZaprySecurityStore.backupGetDic(server: backupID)
+        return ZaprySecurityStore.deleteSSItem(query: query)
     }
     static func getUndecryptWalletsThatAuthByBackupPassword() -> Dictionary<String,String> {
         var ret = Dictionary<String,String>()
-        let query = MMSecurityStore.backupAllGetDic()
-        guard let array = MMSecurityStore.getSSItems(query: query) else { return ret }
+        let query = ZaprySecurityStore.backupAllGetDic()
+        guard let array = ZaprySecurityStore.getSSItems(query: query) else { return ret }
         for item in array {
             if let server = item[kSecAttrServer as String] as? String {
-                if ( server.hasSuffix(MMSecurityStore.backup_password_wallet_item) ) {
+                if ( server.hasSuffix(ZaprySecurityStore.backup_password_wallet_item) ) {
                     if let data = item[kSecValueData as String] as? Data {
                         if let WK = String(data: data, encoding: .utf8) {
                             ret[server] = WK
@@ -227,12 +227,12 @@ import CryptoSwift
     }
     private static func backupEncode(walletInfo: String, backupPassword: String) -> Data? {
         if ( backupPassword.count < 6 ) { return nil }
-        guard let WK = MMSecurityStore.encrypt(value: walletInfo, key: backupPassword) else { return nil }
+        guard let WK = ZaprySecurityStore.encrypt(value: walletInfo, key: backupPassword) else { return nil }
         return WK.data(using: .utf8)
     }
     private static func backupSetDic(server: String, data: Data) -> Dictionary<String,Any>? {
         return [kSecClass as String: kSecClassInternetPassword,
-                kSecAttrAccount as String: MMSecurityStore.backup_accout,
+                kSecAttrAccount as String: ZaprySecurityStore.backup_accout,
                 kSecAttrServer as String: server,
                 kSecAttrSynchronizable as String: kCFBooleanTrue as Any,
                 
@@ -241,7 +241,7 @@ import CryptoSwift
     }
     private static func backupGetDic(server: String) -> Dictionary<String,Any> {
         return [kSecClass as String: kSecClassInternetPassword,
-                kSecAttrAccount as String: MMSecurityStore.backup_accout,
+                kSecAttrAccount as String: ZaprySecurityStore.backup_accout,
                 kSecAttrServer as String: server,
                 kSecAttrSynchronizable as String: kCFBooleanTrue as Any,
                 
@@ -250,7 +250,7 @@ import CryptoSwift
     }
     private static func backupAllGetDic() -> Dictionary<String,Any> {
         return [kSecClass as String: kSecClassInternetPassword,
-                kSecAttrAccount as String: MMSecurityStore.backup_accout,
+                kSecAttrAccount as String: ZaprySecurityStore.backup_accout,
                 kSecAttrSynchronizable as String: kCFBooleanTrue as Any,
                 
                 kSecReturnData as String: true,

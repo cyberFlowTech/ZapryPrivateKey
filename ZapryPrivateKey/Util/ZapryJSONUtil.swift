@@ -1,5 +1,5 @@
 //
-//  JSONUtil.swift
+//  ZapryJSONUtil.swift
 //  MIMO
 //
 //  Created by zhang shuai on 2023/4/19.
@@ -11,7 +11,7 @@ import HandyJSON
 // 使用泛型
 
 @objcMembers
-public class JSONUtil: NSObject {
+public class ZapryJSONUtil: NSObject {
     /**
      *  Json转对象
      */

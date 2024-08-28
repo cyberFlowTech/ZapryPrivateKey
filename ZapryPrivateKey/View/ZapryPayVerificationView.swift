@@ -1,5 +1,5 @@
 //
-//  PayVerificationPopupView.swift
+//  ZapryPayVerificationView.swift
 //  MIMO
 //
 //  Created by admin  on 2024/3/6.
@@ -31,7 +31,7 @@ public enum TronSignType:Int {
     case Approve = 3
 }
 
-public class PayVerificationPopupView:UIView {
+public class ZapryPayVerificationView:UIView {
     let tagPrex = 200000
     
     var finishedCallback: ((CheckAction,String,String) -> Void)?
@@ -236,10 +236,10 @@ public class PayVerificationPopupView:UIView {
     func verificationResult(password:String) {
         let pas:String?
         if self.verificationModel == .password {
-            pas = MMSecurityStore.getWalletThatAuthByPayPassword(payPassword:password)
+            pas = ZaprySecurityStore.getWalletThatAuthByPayPassword(payPassword:password)
         }else {
             self.touchIdIV.isUserInteractionEnabled = false
-            pas = MMSecurityStore.getWalletThatAuthByBiometric()
+            pas = ZaprySecurityStore.getWalletThatAuthByBiometric()
             self.touchIdIV.isUserInteractionEnabled = true
         }
         
@@ -253,7 +253,7 @@ public class PayVerificationPopupView:UIView {
                 self.codeUnitView.verifyErrorAction()
             }
             let window = ZapryUtil.keyWindow()
-            MMToast.makeToast(ZapryUtil.shared.getZapryLocalizedStringForKey(key: "verification_failed_tip"),isError: true, forView:window)
+            ZapryUtil.makeToast(ZapryUtil.shared.getZapryLocalizedStringForKey(key: "verification_failed_tip"),isError: true, forView:window)
         }
     }
     
@@ -266,9 +266,9 @@ public class PayVerificationPopupView:UIView {
         return str
     }
     
-    class func checkPayPopupView(payScene:PaySceneType) -> PayVerificationPopupView? {
+    class func checkPayPopupView(payScene:PaySceneType) -> ZapryPayVerificationView? {
         let window = ZapryUtil.keyWindow()
-        if let view = window.viewWithTag(200000) as? PayVerificationPopupView,view.paySceneType == payScene,!view.isHidden {
+        if let view = window.viewWithTag(200000) as? ZapryPayVerificationView,view.paySceneType == payScene,!view.isHidden {
             return view
         }
         return nil
@@ -350,10 +350,10 @@ public class PayVerificationPopupView:UIView {
         btn.addTarget(self, action:#selector(closeBtnClickCallBack(sender:)), for: .touchUpInside)
         return btn
     }()
-    lazy var codeUnitView:KeenCodeUnit = {
+    lazy var codeUnitView:ZapryCodeUnit = {
         let kScreenWidth = UIScreen.main.bounds.size.width
         let itemHeight = (kScreenWidth - 15.0*2.0 - 5*8.0)/6.0
-        let view = KeenCodeUnit(frame: CGRectMake(0, 0, kScreenWidth - 15.0*2.0, itemHeight), delegate: self)
+        let view = ZapryCodeUnit(frame: CGRectMake(0, 0, kScreenWidth - 15.0*2.0, itemHeight), delegate: self)
         return view
     }()
     
@@ -434,9 +434,9 @@ public class PayVerificationPopupView:UIView {
     
 }
 
-extension PayVerificationPopupView:KeenCodeUnitDelegate {
+extension ZapryPayVerificationView:ZapryCodeUnitDelegate {
     
-    public func attributesOfCodeUnit(for codeUnit: KeenCodeUnit) -> KeenCodeUnitAttributes {
+    public func attributesOfCodeUnit(for codeUnit: ZapryCodeUnit) -> KeenCodeUnitAttributes {
         var attr = KeenCodeUnitAttributes()
         attr.style = .splitborder
         attr.isSingleAlive = true
@@ -449,7 +449,7 @@ extension PayVerificationPopupView:KeenCodeUnitDelegate {
         return attr
     }
     
-    public func codeUnit(_ codeUnit: KeenCodeUnit, codeText: String, complete: Bool) {
+    public func codeUnit(_ codeUnit: ZapryCodeUnit, codeText: String, complete: Bool) {
         if complete {
             self.verificationResult(password: codeText)
         }

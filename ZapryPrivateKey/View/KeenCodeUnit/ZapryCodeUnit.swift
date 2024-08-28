@@ -1,6 +1,6 @@
 //
-//  KeenCodeUnit.swift
-//  KeenCodeUnit
+//  ZapryCodeUnit.swift
+//  ZapryCodeUnit
 //
 //  Created by chongzone on 2021/3/16.
 //
@@ -89,28 +89,28 @@ public struct KeenCodeUnitAttributes {
 }
 
 //MARK: - 协议
-public protocol KeenCodeUnitDelegate: AnyObject {
+public protocol ZapryCodeUnitDelegate: AnyObject {
     
     /// 属性参数 可选 不设置取默认值
     /// - Returns: 属性对象
-    func attributesOfCodeUnit(for codeUnit: KeenCodeUnit) -> KeenCodeUnitAttributes
+    func attributesOfCodeUnit(for codeUnit: ZapryCodeUnit) -> KeenCodeUnitAttributes
     
     /// 输入回调事件 优先级高于闭包回调
-    func codeUnit(_ codeUnit: KeenCodeUnit, codeText: String, complete: Bool)
+    func codeUnit(_ codeUnit: ZapryCodeUnit, codeText: String, complete: Bool)
 }
 
-public extension KeenCodeUnitDelegate {
+public extension ZapryCodeUnitDelegate {
     
-    func attributesOfCodeUnit(for codeUnit: KeenCodeUnit) -> KeenCodeUnitAttributes {
+    func attributesOfCodeUnit(for codeUnit: ZapryCodeUnit) -> KeenCodeUnitAttributes {
         return KeenCodeUnitAttributes()
     }
 }
 
-//MARK: - KeenCodeUnit 类
-public class KeenCodeUnit: UIView {
+//MARK: - ZapryCodeUnit 类
+public class ZapryCodeUnit: UIView {
     
     /// 代理
-    public weak var delegate: KeenCodeUnitDelegate?
+    public weak var delegate: ZapryCodeUnitDelegate?
     
     /// 光标
     private lazy var cursors: [CAShapeLayer] = []
@@ -151,7 +151,7 @@ public class KeenCodeUnit: UIView {
     ///   - delegate: 代理
     public init(
         frame: CGRect,
-        delegate: KeenCodeUnitDelegate
+        delegate: ZapryCodeUnitDelegate
     ) {
         super.init(frame: frame)
         self.delegate = delegate
@@ -239,7 +239,7 @@ public class KeenCodeUnit: UIView {
 }
 
 //MARK: - 布局|配置
-private extension KeenCodeUnit {
+private extension ZapryCodeUnit {
     
     /// 布局控件
     func createSubviews() {

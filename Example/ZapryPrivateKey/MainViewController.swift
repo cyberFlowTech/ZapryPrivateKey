@@ -31,7 +31,7 @@ class MainViewController:UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(gotoVerifictionTypeVC(notif:)), name: NSNotification.Name("GOTO_SET_VERFICATION_TYPE"), object: nil)
         NotificationCenter.default.addObserver(self, selector:#selector(gotoWalletVC(notif:)), name: Notification.Name("GOTOWALLET"), object: nil)
         
-        PaymentManager.shared.initOptions(userId:"844097")
+        ZapryPrivateKeyHelper.shared.initOptions(userId:"844097")
         ZapryUtil.shared.setPreferredLanguage(preLan: "zh-Hans")
         self.navigationController?.navigationBar.isHidden = true
     }
@@ -58,8 +58,8 @@ class MainViewController:UIViewController {
     
     @objc func clickBtnCallBack(sender:UIButton) {
         
-        guard let _ = PaymentManager.shared.getMultiAddress() else {
-            MMToast.makeToast("未创建钱包",isError: true, forView:ZapryUtil.keyWindow())
+        guard let _ = ZapryPrivateKeyHelper.shared.getMultiAddress() else {
+            ZapryUtil.makeToast("未创建钱包",isError: true, forView:ZapryUtil.keyWindow())
             return 
         }
         let payModel = PayModel()
@@ -69,16 +69,16 @@ class MainViewController:UIViewController {
         payModel.signType = payScene.rawValue
 //        let chainCode = "20000"
 //        payModel.chainCode = chainCode
-        PaymentManager.shared.checkBeforePay(sceneType: payScene.rawValue, payModel: payModel) { action, result, error in
+        ZapryPrivateKeyHelper.shared.checkBeforePay(sceneType: payScene.rawValue, payModel: payModel) { action, result, error in
             print("action:\(action),result:\(result),error:\(error)")
             let isSuccess = action == 1
-            MMToast.makeToast(isSuccess ? "Successful" : "Failed", isError:!isSuccess, forView: ZapryUtil.keyWindow())
+            ZapryUtil.makeToast(isSuccess ? "Successful" : "Failed", isError:!isSuccess, forView: ZapryUtil.keyWindow())
         }
     }
     
     @objc func createWalletBtnCallBack(sender:UIButton) {
-        if let _ = PaymentManager.shared.getMultiAddress() {
-            MMToast.makeToast("钱包已创建",isError: true, forView:ZapryUtil.keyWindow())
+        if let _ = ZapryPrivateKeyHelper.shared.getMultiAddress() {
+            ZapryUtil.makeToast("钱包已创建",isError: true, forView:ZapryUtil.keyWindow())
             return
         }
         let vc = RNManager.shared.getVC(page: .wallet)
@@ -86,13 +86,13 @@ class MainViewController:UIViewController {
     }
     
     @objc func deleteWalletBtnCallBack(sender:UIButton) {
-        guard let _ = PaymentManager.shared.getMultiAddress() else {
-            MMToast.makeToast("未创建钱包",isError: true, forView:ZapryUtil.keyWindow())
+        guard let _ = ZapryPrivateKeyHelper.shared.getMultiAddress() else {
+            ZapryUtil.makeToast("未创建钱包",isError: true, forView:ZapryUtil.keyWindow())
             return 
         }
-        PaymentManager.shared.deleteWallet()
+        ZapryPrivateKeyHelper.shared.deleteWallet()
         RNManager.shared.closeRNVC()
-        MMToast.makeToast("Delete Successful", isError:false, forView: ZapryUtil.keyWindow())
+        ZapryUtil.makeToast("Delete Successful", isError:false, forView: ZapryUtil.keyWindow())
     }
     
     lazy var clickBtn:UIButton = {
