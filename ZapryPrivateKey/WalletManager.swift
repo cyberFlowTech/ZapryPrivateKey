@@ -38,6 +38,21 @@ public struct WalletModel: Codable {
     
     public static let shared = WalletManager()
     
+    public static func setMultiWalletInfo(mnemonic:String,wallet:[String: Any],password:String,backupID:String?,completion:@escaping (Bool,String)->Void) {
+        guard !mnemonic.isEmpty,!wallet.isEmpty else {
+            completion(false,"")
+            return
+        }
+        if (WalletManager.saveWallet(mnemonic: mnemonic, multiWalletInfo: wallet,password:password) ) {
+            if let extData = backupID {
+                WalletManager.setCurrentBackupID(backupID: extData)
+            }
+            completion(true,"")
+        } else {
+            completion(false,"")
+        }
+    }
+    
     public static func getWalletModel(password:String) -> WalletModel? { // 注意如果是支付密码方式，需要有密码
         var model: WalletModel? = nil
         let type = UserConfig.read()
@@ -120,7 +135,7 @@ public struct WalletModel: Codable {
             }
         case .none,.denyBiometry,.lock:
             let window = ZapryUtil.keyWindow()
-            MMToast.makeToast("未设置验证方式不能保存钱包",isError: true, forView:window)
+            MMToast.makeToast(ZapryUtil.shared.getZapryLocalizedStringForKey(key: "save_wallet_error"),isError: true, forView:window)
         }
         if ( success ) {
             if let adds = WalletManager.getMultiAddressFromModel(model: model) { // 非敏感信息单独存储，不需要密码验证就可以使用

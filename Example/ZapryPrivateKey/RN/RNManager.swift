@@ -305,17 +305,20 @@ extension RNManager {
         guard let params = params,
               let wallet = params["wallet"] as? [String: Any],
             let mnemonic = params["mnemonic"] as? String else {
-            reject?("-1", "", nil)
+            reject?("-1","", nil)
             return
         }
+        var backupID:String?
+        if let extData = params["extData"] as? [String: Any], let buID = extData["backupId"] as? String {
+            backupID = buID
+        }
         let password = RNManager.shared.payPasswordForSet ?? ""
-        if ( WalletManager.saveWallet(mnemonic: mnemonic, multiWalletInfo: wallet,password:password) ) {
-            if let extData = params["extData"] as? [String: Any], let backupID = extData["backupId"] as? String {
-                WalletManager.setCurrentBackupID(backupID: backupID)
+        WalletManager.setMultiWalletInfo(mnemonic:mnemonic, wallet: wallet, password: password, backupID: backupID) { result, msg in
+            if result {
+                resolver?("0")
+            }else {
+                reject?("-1",msg, nil)
             }
-            resolver?("0")
-        } else {
-            reject?("-1", "", nil)
         }
     }
     
@@ -324,44 +327,22 @@ extension RNManager {
                     resolver: RCTPromiseResolveBlock?,
                     reject: RCTPromiseRejectBlock?) {
         let type:Int =  params?["type"] as? Int ?? 0
-        if type == 1 || type == 2 {
-            DeviceInfo.authByFaceIDOrTouchID {[weak self] error in
-                if let err = error {
-                    //出错了
-                    print("setPayAuth failed:\(err.code),\(err.localizedDescription)")
-                }else {
-                    //成功
-                    self?.transferToSecurityStore(type: type)
-                    resolver?(true)
+        var isSaveWallet:Bool = true
+        if let _ = self.transferToSSCompletion {
+            isSaveWallet = false
+        }
+        let payPassword = params?["payPassword"] as? String ?? ""
+        PaymentManager.shared.setPayAuth(type: type, password:payPassword,isSaveWallet:isSaveWallet) { result, msg in
+            if result{
+                if let completion = self.transferToSSCompletion {
+                    completion(VerificationType(rawValue: type) ?? .none)
                 }
-            }
-        }else if type == 3 {
-            let payPassword = params?["payPassword"] as? String ?? ""
-            if !payPassword.isEmpty {
-                //shytodo 保存支付密码需求去掉
-                RNManager.shared.payPasswordForSet = payPassword;
-                self.transferToSecurityStore(type: type)
+                if type == 3 {
+                    RNManager.shared.payPasswordForSet = payPassword;
+                }
                 resolver?(true)
             } else {
-                reject?("-1", "", nil)
-                print("setPayAuth failed:\(type)")
-            }
-        }
-    }
-    
-    func transferToSecurityStore(type:Int) {
-        let verificationType = VerificationType(rawValue: type) ?? .none
-        if let completion = self.transferToSSCompletion {
-            completion(verificationType)
-        }else {
-            let password = RNManager.shared.payPasswordForSet ?? ""
-            let success = WalletManager.transferToSecurityStoreIfNeeded(targetType: verificationType,walletModel: nil,password: password)
-            if success {
-                UserConfig.save(type:verificationType)
-            }else {
-                //保存不成功
-                print("switch \(verificationType.rawValue) Verification fail:save keychain failed")
-                MMToast.makeToast("Set failed",isError:true, forView: ZapryUtil.keyWindow())
+                reject?("-1", msg, nil)
             }
         }
     }

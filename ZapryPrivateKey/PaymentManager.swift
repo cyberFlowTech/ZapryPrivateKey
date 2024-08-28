@@ -42,6 +42,43 @@ public class PaymentManager: NSObject {
     public static let ERROR_CODE_PASSWORD_FAILED:Int = -10002
     private var sceneListWithoutUI:[PaySceneType] = [.unBind,.checkMnemonicWord,.CreateWallet,.VerificationBiometic,.PayPasswordAuth,.AddNewChain,.CloudBackup,.Sign]
     
+    public func setPayAuth(type:Int,password:String,isSaveWallet:Bool,completion:@escaping (Bool,String)->Void) {
+        if type == 1 || type == 2 {
+            DeviceInfo.authByFaceIDOrTouchID {[weak self] error in
+                if let err = error {
+                    //出错了
+                    let errorTip = "setPayAuth failed:\(err.code),\(err.localizedDescription)"
+                    completion(false,errorTip)
+                }else {
+                    //成功
+                    self?.transferToSecurityStore(type: type,isSave: isSaveWallet,password: "")
+                    completion(true,"")
+                }
+            }
+        }else if type == 3 {
+            if !password.isEmpty {
+                self.transferToSecurityStore(type: type,isSave: isSaveWallet,password:password)
+                completion(true,"")
+            } else {
+                completion(false,"setPayAuth failed:\(type)")
+            }
+        }
+    }
+    
+    func transferToSecurityStore(type:Int,isSave:Bool,password:String) {
+        let verificationType = VerificationType(rawValue: type) ?? .none
+        if isSave {
+            let success = WalletManager.transferToSecurityStoreIfNeeded(targetType: verificationType,walletModel: nil,password: password)
+            if success {
+                UserConfig.save(type:verificationType)
+            }else {
+                //保存不成功
+                print("switch \(verificationType.rawValue) Verification fail:save keychain failed")
+                MMToast.makeToast("Set failed",isError:true, forView: ZapryUtil.keyWindow())
+            }
+        }
+    }
+    
     public func checkBeforeSet(completion:@escaping (Int,String,String) -> Void) {
         self.checkBeforePayOrSet(hasSet: true,completion: completion)
     }
