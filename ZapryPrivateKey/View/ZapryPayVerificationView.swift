@@ -134,63 +134,63 @@ public class ZapryPayVerificationView:UIView {
         var isNFT:Bool = false
         var title = ""
         if self.verificationModel == .password {
-            title = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_input_pay_password")
+            title = ZapryNSI18n.shared.biometric_input_pay_password
         }else if self.verificationModel == .faceID {
-            title = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_pay_face")
+            title = ZapryNSI18n.shared.biometric_pay_face
         }else if self.verificationModel == .touchID {
-            title = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_fingerprint_verify")
+            title = ZapryNSI18n.shared.biometric_fingerprint_verify
         }
         self.titleLabel.text = title
         var payAmount = self.payModel.amount
         let token:[String:Any]? = self.payModel.token
         var payUnit:String = token?["token"] as? String ?? "ETMP"
         if self.paySceneType == .SendRedpacket {
-            title = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_sending_crypto")
+            title = ZapryNSI18n.shared.biometric_sending_crypto
         } else if self.paySceneType == .TransferAccount {
             let addressToStr = self.getShowAddress(address: self.payModel.to)
             isNFT = self.payModel.nftTokenId.count > 0
             let nick = self.payModel.nick.isEmpty ? "" :  "[\(self.payModel.nick)]"
             if isNFT {
-                title = String(format:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_transferring_nft"),nick,addressToStr)
+                title = String(format:ZapryNSI18n.shared.biometric_transferring_nft,nick,addressToStr)
                 payUnit = (self.payModel.nftName)
                 payAmount = ""
                 let tokenId = self.getShowAddress(address:self.payModel.nftTokenId,minCount:16,preNum: 5,sufNum: 5)
                 self.nftTokenIdLabel.text = tokenId.count > 0 ? "#\(tokenId)" : tokenId
             }else {
-                title = String(format:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_transferring"),nick,addressToStr)
+                title = String(format:ZapryNSI18n.shared.biometric_transferring,nick,addressToStr)
             }
             
         }else if self.paySceneType == .RechargeToChangePocket {
-            title =  ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_top_up")
+            title =  ZapryNSI18n.shared.biometric_top_up
         }else if self.paySceneType == .WithdrawToWallet {
-            title = String(format:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "withdraw_wallet_tip"), self.payModel.to)
+            title = String(format:ZapryNSI18n.shared.withdraw_wallet_tip, self.payModel.to)
         }else if self.paySceneType == .Transaction {
-            title = String(format:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_transferring"),"",self.payModel.to)
-            payUnit = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_contract_trading")
+            title = String(format:ZapryNSI18n.shared.biometric_transferring,"",self.payModel.to)
+            payUnit = ZapryNSI18n.shared.biometric_contract_trading
             payAmount = ""
         }else if self.paySceneType == .Sign {
             let isTronSign = self.payModel.signType > 0
             if isTronSign {
                 if self.payModel.signType == 3 {
-                    payUnit = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_contract_trading")
+                    payUnit = ZapryNSI18n.shared.biometric_contract_trading
                     title = self.payModel.signData["contract"] as? String ?? ""
                 } else if self.payModel.signType == 2 {
-                    payUnit = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_contract_trading")
+                    payUnit = ZapryNSI18n.shared.biometric_contract_trading
                     title = self.payModel.signData["to"] as? String ?? ""
                 }else{
                     title = self.payModel.signData["to"] as? String ?? ""
-                    payUnit = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "signature_message_sign")
+                    payUnit = ZapryNSI18n.shared.signature_message_sign
                 }
                 if !title.isEmpty {
-                    title = String(format:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_transferring"),"",title)
+                    title = String(format:ZapryNSI18n.shared.biometric_transferring,"",title)
                 }
             } else {
                 if !self.payModel.to.isEmpty {
-                    title = String(format:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_transferring"),"",self.payModel.to)
+                    title = String(format:ZapryNSI18n.shared.biometric_transferring,"",self.payModel.to)
                 }else {
                     title = ""
                 }
-                payUnit = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "signature_message_sign")
+                payUnit = ZapryNSI18n.shared.signature_message_sign
             }
             payAmount = ""
         }
@@ -253,7 +253,7 @@ public class ZapryPayVerificationView:UIView {
                 self.codeUnitView.verifyErrorAction()
             }
             let window = ZapryUtil.keyWindow()
-            ZapryUtil.makeToast(ZapryUtil.shared.getZapryLocalizedStringForKey(key: "verification_failed_tip"),isError: true, forView:window)
+            ZapryUtil.makeToast(ZapryNSI18n.shared.verification_failed_tip,isError: true, forView:window)
         }
     }
     
@@ -403,7 +403,7 @@ public class ZapryPayVerificationView:UIView {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14)
         label.textColor = UIColor(hex: "#6C737F")
-        label.text = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_pay_method")
+        label.text = ZapryNSI18n.shared.biometric_pay_method
         return label
     }()
     
@@ -411,7 +411,7 @@ public class ZapryPayVerificationView:UIView {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14)
         label.textColor = UIColor(hex: "#6C737F")
-        label.text = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "mine_wallet")
+        label.text = ZapryNSI18n.shared.mine_wallet
         label.textAlignment = .right
         return label
     }()

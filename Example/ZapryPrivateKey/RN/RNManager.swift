@@ -284,7 +284,7 @@ extension RNManager {
                 }
             }else {
                 if sceneType == .PayPasswordAuth {
-                    let errTip = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "verification_failed_tip")
+                    let errTip = ZapryNSI18n.shared.verification_failed_tip
                     let err = NSError(domain: "Error", code: ZapryPrivateKeyHelper.ERROR_CODE_PASSWORD_FAILED, userInfo:[NSLocalizedDescriptionKey:errTip])
                     self?.completionHandle?(false,"",err)
                 }

@@ -141,7 +141,7 @@ public class ZapryPrivateKeyHelper: NSObject {
             if verificationType == .faceID || verificationType == .touchID {
                 let type = ZapryDeviceInfo.getDeviceBiometricType()
                 if type == .none || type == .denyBiometry || type == .lock {
-                    ZapryUtil.makeToast(ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_disabler_tip"), isError: true, forView: window)
+                    ZapryUtil.makeToast(ZapryNSI18n.shared.biometric_disabler_tip, isError: true, forView: window)
                     return
                 }
             }
@@ -231,14 +231,14 @@ public class ZapryPrivateKeyHelper: NSObject {
         let type = ZapryDeviceInfo.getDeviceBiometricType()
         let hasPassword = forceSetPassworld ? true : (type == .none || type == .denyBiometry || type == .lock)
         
-        let title = ZapryUtil.shared.getZapryLocalizedStringForKey(key:(hasPassword ? "biometric_setting_pay_password" : "biometric_setting_biometric"))
-        let content = ZapryUtil.shared.getZapryLocalizedStringForKey(key: (hasPassword ? "biometric_setting_pay_password_subtitle" : "biometric_setting_biometric_subtitle"))
+        let title = hasPassword ? ZapryNSI18n.shared.biometric_setting_pay_password : ZapryNSI18n.shared.biometric_setting_biometric
+        let content = hasPassword ? ZapryNSI18n.shared.biometric_setting_pay_password_subtitle : ZapryNSI18n.shared.biometric_setting_biometric_subtitle
         var subContent:String = ""
         let hasNoWallet = ZapryWalletManager.getWalletAddress().count <= 0
         if hasNoWallet {
-            subContent = ZapryUtil.shared.getZapryLocalizedStringForKey(key:(hasPassword ? "biometric_setting_pay_password_desc": "biometric_setting_biometric_desc"))
+            subContent = hasPassword ? ZapryNSI18n.shared.biometric_setting_pay_password_desc : ZapryNSI18n.shared.biometric_setting_biometric_desc 
         }
-        let alertView = ZapryAlertView(title:title, content:content,subContent:subContent, confirmText:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "common_skip"), cancelText:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "common_skip"))
+        let alertView = ZapryAlertView(title:title, content:content,subContent:subContent, confirmText:ZapryNSI18n.shared.common_skip, cancelText:ZapryNSI18n.shared.common_skip)
         alertView.confirmHandle = { v in
             let verifyType = hasPassword ? 3 : ZapryDeviceInfo.getDeviceBiometricType().rawValue
             NotificationCenter.default.post(name: NSNotification.Name("GOTO_SET_VERFICATION_TYPE"), object: nil, userInfo: ["type":verifyType])

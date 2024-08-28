@@ -41,10 +41,10 @@ public class ZapryDeviceInfo {
         }
         Task {
             let context = LAContext()
-            context.localizedFallbackTitle = ZapryUtil.shared.getZapryLocalizedStringForKey(key: "verification_failed_retry_tip")
+            context.localizedFallbackTitle = ZapryNSI18n.shared.verification_failed_retry_tip
             
             do {
-                try await context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason:ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_dialog_subtitle"))
+                try await context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason:ZapryNSI18n.shared.biometric_dialog_subtitle)
                 DispatchQueue.main.async {
                     comp(nil)
                 }
