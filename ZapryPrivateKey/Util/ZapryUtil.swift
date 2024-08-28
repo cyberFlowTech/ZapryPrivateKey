@@ -121,19 +121,19 @@ public class ZapryUtil {
             style.isHorizontal = false
             let imageName = isError ? "toast_error_icon" : "toast_ right_icon"
             let image = ZapryUtil.shared.getBundleImage(imageName: imageName)
-            view?.makeToast(message, position: .center, image:image,style:style)
+            view?.zapryMakeToast(message, position: .center, image:image,style:style)
         }
     }
     
     @objc public class func makeToastWithoutState(_ message: String?, forView view: UIView?) {
         DispatchQueue.main.async {
-            view?.makeToast(message, position: .center)
+            view?.zapryMakeToast(message, position: .center)
         }
     }
 
     @objc public class func hideToast(view: UIView?) {
         DispatchQueue.main.async {
-            view?.hideToast()
+            view?.zapryHideToast()
         }
     }
 }

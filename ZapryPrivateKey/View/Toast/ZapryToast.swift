@@ -56,7 +56,7 @@ public extension UIView {
      Objective-C runtime, so the (ugly) solution is to wrap them in a
      class that can be used with associated objects.
      */
-    private class ToastCompletionWrapper {
+    private class ZapryToastCompletionWrapper {
         let completion: ((Bool) -> Void)?
         
         init(_ completion: ((Bool) -> Void)?) {
@@ -64,11 +64,11 @@ public extension UIView {
         }
     }
     
-    private enum ToastError: Error {
+    private enum ZapryToastError: Error {
         case missingParameters
     }
     
-    private var activeToasts: NSMutableArray {
+    private var zapryActiveToasts: NSMutableArray {
         get {
             if let activeToasts = objc_getAssociatedObject(self, &ZapryToastKeys.activeToasts) as? NSMutableArray {
                 return activeToasts
@@ -80,7 +80,7 @@ public extension UIView {
         }
     }
     
-    private var queue: NSMutableArray {
+    private var zapryQueue: NSMutableArray {
         get {
             if let queue = objc_getAssociatedObject(self, &ZapryToastKeys.queue) as? NSMutableArray {
                 return queue
@@ -106,11 +106,11 @@ public extension UIView {
      @param completion The completion closure, executed after the toast view disappears.
             didTap will be `true` if the toast view was dismissed from a tap.
      */
-    func makeToast(_ message: String?, duration: TimeInterval = ZapryToastManager.shared.duration, position: ZapryToastPosition = ZapryToastManager.shared.position, title: String? = nil, image: UIImage? = nil, style: ZapryToastStyle = ZapryToastManager.shared.style, completion: ((_ didTap: Bool) -> Void)? = nil) {
+    func zapryMakeToast(_ message: String?, duration: TimeInterval = ZapryToastManager.shared.duration, position: ZapryToastPosition = ZapryToastManager.shared.position, title: String? = nil, image: UIImage? = nil, style: ZapryToastStyle = ZapryToastManager.shared.style, completion: ((_ didTap: Bool) -> Void)? = nil) {
         do {
-            let toast = try toastViewForMessage(message, title: title, image: image, style: style)
-            showToast(toast, duration: duration, position: position, completion: completion)
-        } catch ToastError.missingParameters {
+            let toast = try zapryToastViewForMessage(message, title: title, image: image, style: style)
+            zapryShowToast(toast, duration: duration, position: position, completion: completion)
+        } catch ZapryToastError.missingParameters {
             print("Error: message, title, and image are all nil")
         } catch {}
     }
@@ -127,11 +127,11 @@ public extension UIView {
      @param completion The completion closure, executed after the toast view disappears.
             didTap will be `true` if the toast view was dismissed from a tap.
      */
-    func makeToast(_ message: String?, duration: TimeInterval = ZapryToastManager.shared.duration, point: CGPoint, title: String?, image: UIImage?, style: ZapryToastStyle = ZapryToastManager.shared.style, completion: ((_ didTap: Bool) -> Void)?) {
+    func zapryMakeToast(_ message: String?, duration: TimeInterval = ZapryToastManager.shared.duration, point: CGPoint, title: String?, image: UIImage?, style: ZapryToastStyle = ZapryToastManager.shared.style, completion: ((_ didTap: Bool) -> Void)?) {
         do {
-            let toast = try toastViewForMessage(message, title: title, image: image, style: style)
-            showToast(toast, duration: duration, point: point, completion: completion)
-        } catch ToastError.missingParameters {
+            let toast = try zapryToastViewForMessage(message, title: title, image: image, style: style)
+            zapryShowToast(toast, duration: duration, point: point, completion: completion)
+        } catch ZapryToastError.missingParameters {
             print("Error: message, title, and image cannot all be nil")
         } catch {}
     }
@@ -149,9 +149,9 @@ public extension UIView {
      @param completion The completion block, executed after the toast view disappears.
      didTap will be `true` if the toast view was dismissed from a tap.
      */
-    func showToast(_ toast: UIView, duration: TimeInterval = ZapryToastManager.shared.duration, position: ZapryToastPosition = ZapryToastManager.shared.position, completion: ((_ didTap: Bool) -> Void)? = nil) {
+    func zapryShowToast(_ toast: UIView, duration: TimeInterval = ZapryToastManager.shared.duration, position: ZapryToastPosition = ZapryToastManager.shared.position, completion: ((_ didTap: Bool) -> Void)? = nil) {
         let point = position.centerPoint(forToast: toast, inSuperview: self)
-        showToast(toast, duration: duration, point: point, completion: completion)
+        zapryShowToast(toast, duration: duration, point: point, completion: completion)
     }
     
     /**
@@ -165,16 +165,16 @@ public extension UIView {
      @param completion The completion block, executed after the toast view disappears.
      didTap will be `true` if the toast view was dismissed from a tap.
      */
-    func showToast(_ toast: UIView, duration: TimeInterval = ZapryToastManager.shared.duration, point: CGPoint, completion: ((_ didTap: Bool) -> Void)? = nil) {
-        objc_setAssociatedObject(toast, &ZapryToastKeys.completion, ToastCompletionWrapper(completion), .OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    func zapryShowToast(_ toast: UIView, duration: TimeInterval = ZapryToastManager.shared.duration, point: CGPoint, completion: ((_ didTap: Bool) -> Void)? = nil) {
+        objc_setAssociatedObject(toast, &ZapryToastKeys.completion, ZapryToastCompletionWrapper(completion), .OBJC_ASSOCIATION_RETAIN_NONATOMIC);
         
-        if ZapryToastManager.shared.isQueueEnabled, activeToasts.count > 0 {
+        if ZapryToastManager.shared.isQueueEnabled, zapryActiveToasts.count > 0 {
             objc_setAssociatedObject(toast, &ZapryToastKeys.duration, NSNumber(value: duration), .OBJC_ASSOCIATION_RETAIN_NONATOMIC);
             objc_setAssociatedObject(toast, &ZapryToastKeys.point, NSValue(cgPoint: point), .OBJC_ASSOCIATION_RETAIN_NONATOMIC);
             
-            queue.add(toast)
+            zapryQueue.add(toast)
         } else {
-            showToast(toast, duration: duration, point: point)
+            zapryShowToast(toast, duration: duration, point: point)
         }
     }
     
@@ -190,9 +190,9 @@ public extension UIView {
      hide activity toasts.
      
     */
-    func hideToast() {
-        guard let activeToast = activeToasts.firstObject as? UIView else { return }
-        hideToast(activeToast)
+    func zapryHideToast() {
+        guard let activeToast = zapryActiveToasts.firstObject as? UIView else { return }
+        zapryHideToast(activeToast)
     }
     
     /**
@@ -203,9 +203,9 @@ public extension UIView {
      
      @warning this does not clear a toast view that is currently waiting in the queue.
      */
-    func hideToast(_ toast: UIView) {
-        guard activeToasts.contains(toast) else { return }
-        hideToast(toast, fromTap: false)
+    func zapryHideToast(_ toast: UIView) {
+        guard zapryActiveToasts.contains(toast) else { return }
+        zapryHideToast(toast, fromTap: false)
     }
     
     /**
@@ -214,16 +214,16 @@ public extension UIView {
      @param includeActivity If `true`, toast activity will also be hidden. Default is `false`.
      @param clearQueue If `true`, removes all toast views from the queue. Default is `true`.
     */
-    func hideAllToasts(includeActivity: Bool = false, clearQueue: Bool = true) {
+    func zapryHideAllToasts(includeActivity: Bool = false, clearQueue: Bool = true) {
         if clearQueue {
-            clearToastQueue()
+            zapryClearToastQueue()
         }
         
-        activeToasts.compactMap { $0 as? UIView }
-                    .forEach { hideToast($0) }
+        zapryActiveToasts.compactMap { $0 as? UIView }
+                    .forEach { zapryHideToast($0) }
         
         if includeActivity {
-            hideToastActivity()
+            zapryHideToastActivity()
         }
     }
     
@@ -232,8 +232,8 @@ public extension UIView {
      active. Use `hideAllToasts(clearQueue:)` to hide the active toasts views and clear
      the queue.
      */
-    func clearToastQueue() {
-        queue.removeAllObjects()
+    func zapryClearToastQueue() {
+        zapryQueue.removeAllObjects()
     }
     
     // MARK: - Activity Methods
@@ -250,13 +250,13 @@ public extension UIView {
     
      @param position The toast's position
      */
-    func makeToastActivity(_ position: ZapryToastPosition) {
+    func zapryMakeToastActivity(_ position: ZapryToastPosition) {
         // sanity
         guard objc_getAssociatedObject(self, &ZapryToastKeys.activityView) as? UIView == nil else { return }
         
-        let toast = createToastActivityView()
+        let toast = zapryCreateToastActivityView()
         let point = position.centerPoint(forToast: toast, inSuperview: self)
-        makeToastActivity(toast, point: point)
+        zapryMakeToastActivity(toast, point: point)
     }
     
     /**
@@ -271,18 +271,18 @@ public extension UIView {
      
      @param point The toast's center point
      */
-    func makeToastActivity(_ point: CGPoint) {
+    func zapryMakeToastActivity(_ point: CGPoint) {
         // sanity
         guard objc_getAssociatedObject(self, &ZapryToastKeys.activityView) as? UIView == nil else { return }
         
-        let toast = createToastActivityView()
-        makeToastActivity(toast, point: point)
+        let toast = zapryCreateToastActivityView()
+        zapryMakeToastActivity(toast, point: point)
     }
     
     /**
      Dismisses the active toast activity indicator view.
      */
-    func hideToastActivity() {
+    func zapryHideToastActivity() {
         if let toast = objc_getAssociatedObject(self, &ZapryToastKeys.activityView) as? UIView {
             UIView.animate(withDuration: ZapryToastManager.shared.style.fadeDuration, delay: 0.0, options: [.curveEaseIn, .beginFromCurrentState], animations: {
                 toast.alpha = 0.0
@@ -295,7 +295,7 @@ public extension UIView {
     
     // MARK: - Private Activity Methods
     
-    private func makeToastActivity(_ toast: UIView, point: CGPoint) {
+    private func zapryMakeToastActivity(_ toast: UIView, point: CGPoint) {
         toast.alpha = 0.0
         toast.center = point
         
@@ -308,7 +308,7 @@ public extension UIView {
         })
     }
     
-    private func createToastActivityView() -> UIView {
+    private func zapryCreateToastActivityView() -> UIView {
         let style = ZapryToastManager.shared.style
         
         let activityView = UIView(frame: CGRect(x: 0.0, y: 0.0, width: style.activitySize.width, height: style.activitySize.height))
@@ -334,30 +334,30 @@ public extension UIView {
     
     // MARK: - Private Show/Hide Methods
     
-    private func showToast(_ toast: UIView, duration: TimeInterval, point: CGPoint) {
+    private func zapryShowToast(_ toast: UIView, duration: TimeInterval, point: CGPoint) {
         toast.center = point
         toast.alpha = 0.0
         
         if ZapryToastManager.shared.isTapToDismissEnabled {
-            let recognizer = UITapGestureRecognizer(target: self, action: #selector(UIView.handleToastTapped(_:)))
+            let recognizer = UITapGestureRecognizer(target: self, action: #selector(UIView.zapryHandleToastTapped(_:)))
             toast.addGestureRecognizer(recognizer)
             toast.isUserInteractionEnabled = true
             toast.isExclusiveTouch = true
         }
         
-        activeToasts.add(toast)
+        zapryActiveToasts.add(toast)
         self.addSubview(toast)
         
         UIView.animate(withDuration: ZapryToastManager.shared.style.fadeDuration, delay: 0.0, options: [.curveEaseOut, .allowUserInteraction], animations: {
             toast.alpha = 1.0
         }) { _ in
-            let timer = Timer(timeInterval: duration, target: self, selector: #selector(UIView.toastTimerDidFinish(_:)), userInfo: toast, repeats: false)
+            let timer = Timer(timeInterval: duration, target: self, selector: #selector(UIView.zapryToastTimerDidFinish(_:)), userInfo: toast, repeats: false)
             RunLoop.main.add(timer, forMode: .common)
             objc_setAssociatedObject(toast, &ZapryToastKeys.timer, timer, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
     }
     
-    private func hideToast(_ toast: UIView, fromTap: Bool) {
+    private func zapryHideToast(_ toast: UIView, fromTap: Bool) {
         if let timer = objc_getAssociatedObject(toast, &ZapryToastKeys.timer) as? Timer {
             timer.invalidate()
         }
@@ -366,15 +366,15 @@ public extension UIView {
             toast.alpha = 0.0
         }) { _ in
             toast.removeFromSuperview()
-            self.activeToasts.remove(toast)
+            self.zapryActiveToasts.remove(toast)
             
-            if let wrapper = objc_getAssociatedObject(toast, &ZapryToastKeys.completion) as? ToastCompletionWrapper, let completion = wrapper.completion {
+            if let wrapper = objc_getAssociatedObject(toast, &ZapryToastKeys.completion) as? ZapryToastCompletionWrapper, let completion = wrapper.completion {
                 completion(fromTap)
             }
             
-            if let nextToast = self.queue.firstObject as? UIView, let duration = objc_getAssociatedObject(nextToast, &ZapryToastKeys.duration) as? NSNumber, let point = objc_getAssociatedObject(nextToast, &ZapryToastKeys.point) as? NSValue {
-                self.queue.removeObject(at: 0)
-                self.showToast(nextToast, duration: duration.doubleValue, point: point.cgPointValue)
+            if let nextToast = self.zapryQueue.firstObject as? UIView, let duration = objc_getAssociatedObject(nextToast, &ZapryToastKeys.duration) as? NSNumber, let point = objc_getAssociatedObject(nextToast, &ZapryToastKeys.point) as? NSValue {
+                self.zapryQueue.removeObject(at: 0)
+                self.zapryShowToast(nextToast, duration: duration.doubleValue, point: point.cgPointValue)
             }
         }
     }
@@ -382,15 +382,15 @@ public extension UIView {
     // MARK: - Events
     
     @objc
-    private func handleToastTapped(_ recognizer: UITapGestureRecognizer) {
+    private func zapryHandleToastTapped(_ recognizer: UITapGestureRecognizer) {
         guard let toast = recognizer.view else { return }
-        hideToast(toast, fromTap: true)
+        zapryHideToast(toast, fromTap: true)
     }
     
     @objc
-    private func toastTimerDidFinish(_ timer: Timer) {
+    private func zapryToastTimerDidFinish(_ timer: Timer) {
         guard let toast = timer.userInfo as? UIView else { return }
-        hideToast(toast)
+        zapryHideToast(toast)
     }
     
     // MARK: - Toast Construction
@@ -411,10 +411,10 @@ public extension UIView {
      @throws `ToastError.missingParameters` when message, title, and image are all nil
      @return The newly created toast view
     */
-    func toastViewForMessage(_ message: String?, title: String?, image: UIImage?, style: ZapryToastStyle) throws -> UIView {
+    func zapryToastViewForMessage(_ message: String?, title: String?, image: UIImage?, style: ZapryToastStyle) throws -> UIView {
         // sanity
         guard message != nil || title != nil || image != nil else {
-            throw ToastError.missingParameters
+            throw ZapryToastError.missingParameters
         }
         
         var messageLabel: UILabel?
@@ -763,8 +763,8 @@ public enum ZapryToastPosition {
     case bottom
     
     fileprivate func centerPoint(forToast toast: UIView, inSuperview superview: UIView) -> CGPoint {
-        let topPadding: CGFloat = ZapryToastManager.shared.style.verticalPadding + superview.csSafeAreaInsets.top
-        let bottomPadding: CGFloat = ZapryToastManager.shared.style.verticalPadding + superview.csSafeAreaInsets.bottom
+        let topPadding: CGFloat = ZapryToastManager.shared.style.verticalPadding + superview.zapryCsSafeAreaInsets.top
+        let bottomPadding: CGFloat = ZapryToastManager.shared.style.verticalPadding + superview.zapryCsSafeAreaInsets.bottom
         
         switch self {
         case .top:
@@ -781,7 +781,7 @@ public enum ZapryToastPosition {
 
 private extension UIView {
     
-    var csSafeAreaInsets: UIEdgeInsets {
+    var zapryCsSafeAreaInsets: UIEdgeInsets {
         if #available(iOS 11.0, *) {
             return self.safeAreaInsets
         } else {
