@@ -20,14 +20,14 @@ public struct WalletModel: Codable {
     
     //shy:由于2.8之前的privateKey是存储在UserDefault上的，所以需要兼容老版本，只获取不存
     public static var kMultiUdKey: String {
-        "\(UserConfig.shared.userId)-multi-walletInfo"
+        "\(PaymentManager.shared.getUserIdFromOptions())-multi-walletInfo"
     }
     //shy：2.8之后的非敏感数据address存储在userDefault上的
     public static var kAddressKey: String {
-        "\(UserConfig.shared.userId)-multi-walletInfo-address"
+        "\(PaymentManager.shared.getUserIdFromOptions())-multi-walletInfo-address"
     }
     public static var kCurrentBackupID: String {
-        "\(UserConfig.shared.userId)-multi-walletInfo-currnet-backupID"
+        "\(PaymentManager.shared.getUserIdFromOptions())-multi-walletInfo-currnet-backupID"
     }
     public static func getCurrentBackupID() -> String? {
         return UserDefaults.standard.value(forKey: WalletManager.kCurrentBackupID) as? String
@@ -38,7 +38,7 @@ public struct WalletModel: Codable {
     
     public static let shared = WalletManager()
     
-    public static func setMultiWalletInfo(mnemonic:String,wallet:[String: Any],password:String,backupID:String?,completion:@escaping (Bool,String)->Void) {
+    static func setMultiWalletInfo(mnemonic:String,wallet:[String: Any],password:String,backupID:String?,completion:@escaping (Bool,String)->Void) {
         guard !mnemonic.isEmpty,!wallet.isEmpty else {
             completion(false,"")
             return
@@ -53,9 +53,9 @@ public struct WalletModel: Codable {
         }
     }
     
-    public static func getWalletModel(password:String) -> WalletModel? { // 注意如果是支付密码方式，需要有密码
+    static func getWalletModel(password:String) -> WalletModel? { // 注意如果是支付密码方式，需要有密码
         var model: WalletModel? = nil
-        let type = UserConfig.read()
+        let type = PaymentManager.shared.getPaymentVerificationMethod()
         switch type {
         case .faceID, .touchID:
             if let s = MMSecurityStore.getWalletThatAuthByBiometric() {
@@ -73,22 +73,22 @@ public struct WalletModel: Codable {
         return model
     }
     
-    public static func currentWalletHasBackup() -> Bool {
+    static func currentWalletHasBackup() -> Bool {
         guard let c = WalletManager.getCurrentBackupID() else { return false }
         let ks = MMSecurityStore.getUndecryptWalletsThatAuthByBackupPassword().keys
         return ks.contains(c)
     }
     
-    public static func saveWallet(mnemonic: String, multiWalletInfo: [String: Any],password:String) -> Bool {
+    static func saveWallet(mnemonic: String, multiWalletInfo: [String: Any],password:String) -> Bool {
         guard let info = JSONUtil.dicToJsonString(dic: multiWalletInfo) else { return false }
         var model = WalletModel()
         model.mnemonic = mnemonic
         model.multiWalletInfo = info
-        let type = UserConfig.read()
+        let type = PaymentManager.shared.getPaymentVerificationMethod()
         return WalletManager.saveModelToSecurityStore(model: model, targetType: type,password: password)
     }
     
-    public static func transferToSecurityStoreIfNeeded(targetType: VerificationType, walletModel:WalletModel?,password:String) -> Bool { // 如果安全存储中没有，会从旧存储中读取并迁移到安全存储中
+    static func transferToSecurityStoreIfNeeded(targetType: VerificationType, walletModel:WalletModel?,password:String) -> Bool { // 如果安全存储中没有，会从旧存储中读取并迁移到安全存储中
         var model:WalletModel?
         if let walletModel = walletModel {
             model = walletModel
@@ -115,7 +115,7 @@ public struct WalletModel: Codable {
         return false
     }
     
-    public static func saveModelToSecurityStore(model: WalletModel, targetType: VerificationType,password:String) -> Bool {
+    static func saveModelToSecurityStore(model: WalletModel, targetType: VerificationType,password:String) -> Bool {
         UserDefaultsUtil.saveObject(object: "", key: WalletManager.kAddressKey)
         var success = false
         let encoder = JSONEncoder()
@@ -148,7 +148,7 @@ public struct WalletModel: Codable {
         return success
     }
     
-    public static func backupCurrentWallet(backupPassword: String,password:String) -> String? {
+    static func backupCurrentWallet(backupPassword: String,password:String) -> String? {
         let model = WalletManager.getWalletModel(password: password)
         if let m = model?.mnemonic {
             if let backupID = MMSecurityStore.saveWalletThatAuthByBackupPassword(walletInfo: m, backupPassword: backupPassword) {
@@ -160,7 +160,7 @@ public struct WalletModel: Codable {
     }
 
     // RN还在用，先保留一段时间吧，后面要删掉了，尽量不要使用
-    public static func getWalletInfo(chainCode: String,password:String) -> [String: Any]? {
+    static func getWalletInfo(chainCode: String,password:String) -> [String: Any]? {
         var result: [String: Any] = [:]
         if let model = WalletManager.getWalletModel(password: password) {
             let multi = model.multiWalletInfo
@@ -178,8 +178,8 @@ public struct WalletModel: Codable {
         return nil
     }
     
-    public static func getMultiAddress() -> [String: String]? {
-        let type = UserConfig.read()
+    static func getMultiAddress() -> [String: String]? {
+        let type = PaymentManager.shared.getPaymentVerificationMethod()
         if ( type == .password ) { // 一个补丁：修复两个存储不一致的情况
             if ( MMSecurityStore.hasWalletThatAuthByPayPassword() == false ) {
                 return nil
@@ -249,25 +249,25 @@ public struct WalletModel: Codable {
         UserDefaults.standard.synchronize()
     }
     
-    public static func deleteWallet() {
+    static func deleteWallet() {
         self.deleteOldWallet()
         self.deleteNewWallet()
     }
     
-    public static func deleteNewWallet() {
+    static func deleteNewWallet() {
         _ = MMSecurityStore.deleteWalletThatAuthByBiometric()
         _ = MMSecurityStore.deleteWalletThatAuthByPayPassword()
         UserDefaultsUtil.saveObject(object: "", key: WalletManager.kAddressKey)
         WalletManager.setCurrentBackupID(backupID: "")
     }
     
-    public static func deleteOldWallet() {
-        let singleChainWalletInfo = "\(UserConfig.shared.userId)-walletInfo"
+    static func deleteOldWallet() {
+        let singleChainWalletInfo = "\(PaymentManager.shared.getUserIdFromOptions())-walletInfo"
         WalletManager.remove(key: singleChainWalletInfo)
         WalletManager.remove(key: WalletManager.kMultiUdKey)
     }
     
-    public static func getWalletAddress(chainCode:String="2000000") -> String {
+    static func getWalletAddress(chainCode:String="2000000") -> String {
         guard let dic = WalletManager.getMultiAddress() else { return "" }
         guard let address = dic[chainCode] else { return "" }
         return address

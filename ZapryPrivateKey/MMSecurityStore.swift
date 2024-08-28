@@ -20,14 +20,14 @@ import CryptoSwift
     ///
     private static let biometric_wallet_item = "biometric.web3wallet.zapry.net"
     static func setWalletThatAuthByBiometric(walletInfo: String) -> Bool {
-        let uid = UserConfig.shared.userId
+        let uid = PaymentManager.shared.getUserIdFromOptions()
         if ( uid.count <= 0 || walletInfo.count <= 0 ) { return false }
         guard let data = MMSecurityStore.biometricEncode(walletInfo: walletInfo, key: MMSecurityStore.randomPassword(length: 64)) else { return false }
         guard let query = MMSecurityStore.biometricSetDic(uid: uid, server: MMSecurityStore.biometric_wallet_item, data: data) else { return false }
         return MMSecurityStore.setSSItem(query: query)
     }
-    public static func getWalletThatAuthByBiometric() -> String? {
-        let uid = UserConfig.shared.userId
+    static func getWalletThatAuthByBiometric() -> String? {
+        let uid = PaymentManager.shared.getUserIdFromOptions()
         if ( uid.count <= 0 ) { return nil }
         let query = MMSecurityStore.biometricGetDic(uid: uid, server: MMSecurityStore.biometric_wallet_item)
         if let data = MMSecurityStore.getSSItem(query: query) {
@@ -36,7 +36,7 @@ import CryptoSwift
         return nil
     }
     static func deleteWalletThatAuthByBiometric() -> Bool {
-        let uid = UserConfig.shared.userId
+        let uid = PaymentManager.shared.getUserIdFromOptions()
         if ( uid.count <= 0 ) { return false }
         let query = MMSecurityStore.biometricGetDic(uid: uid, server: MMSecurityStore.biometric_wallet_item)
         return MMSecurityStore.deleteSSItem(query: query)
@@ -107,14 +107,14 @@ import CryptoSwift
     ///
     private static let pay_password_wallet_item = "pay.web3wallet.zapry.net"
     static func setWalletThatAuthByPayPassword(walletInfo: String, payPassword: String) -> Bool {
-        let uid = UserConfig.shared.userId
+        let uid = PaymentManager.shared.getUserIdFromOptions()
         if ( uid.count <= 0 || walletInfo.count <= 0 || payPassword.count < 6 ) { return false }
         guard let data = MMSecurityStore.payPasswordEncode(walletInfo: walletInfo, payPassword: payPassword) else { return false }
         guard let query = MMSecurityStore.payPasswordSetDic(uid: uid, server: MMSecurityStore.pay_password_wallet_item, data: data) else { return false }
         return MMSecurityStore.setSSItem(query: query)
     }
     static func getWalletThatAuthByPayPassword(payPassword: String) -> String? {
-        let uid = UserConfig.shared.userId
+        let uid = PaymentManager.shared.getUserIdFromOptions()
         if ( uid.count <= 0 || payPassword.count < 6 ) { return nil }
         let query = MMSecurityStore.payPasswordGetDic(uid: uid, server: MMSecurityStore.pay_password_wallet_item)
         if let data = MMSecurityStore.getSSItem(query: query) {
@@ -123,7 +123,7 @@ import CryptoSwift
         return nil
     }
     static func hasWalletThatAuthByPayPassword() -> Bool {
-        let uid = UserConfig.shared.userId
+        let uid = PaymentManager.shared.getUserIdFromOptions()
         if ( uid.count <= 0 ) { return false }
         let query = MMSecurityStore.payPasswordGetDic(uid: uid, server: MMSecurityStore.pay_password_wallet_item)
         if let data = MMSecurityStore.getSSItem(query: query) {
@@ -132,7 +132,7 @@ import CryptoSwift
         return false
     }
     static func deleteWalletThatAuthByPayPassword() -> Bool {
-        let uid = UserConfig.shared.userId
+        let uid = PaymentManager.shared.getUserIdFromOptions()
         if ( uid.count <= 0 ) { return false }
         let query = MMSecurityStore.payPasswordGetDic(uid: uid, server: MMSecurityStore.pay_password_wallet_item)
         return MMSecurityStore.deleteSSItem(query: query)

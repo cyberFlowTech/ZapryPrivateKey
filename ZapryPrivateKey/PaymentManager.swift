@@ -33,16 +33,63 @@ public class PayModel:NSObject,HandyJSON {
     required public override init() {}
 }
 
+@objcMembers
+public class ZapryUserInfoModel:NSObject {
+    public var userId:String
+    public init(userId:String) {
+        self.userId = userId
+    }
+}
+
+public enum VerificationType:Int {
+    case lock = -2
+    case denyBiometry = -1
+    case none = 0
+    case touchID = 1
+    case faceID = 2
+    case password = 3
+}
+
 
 @objcMembers
 public class PaymentManager: NSObject {
-    public var CompletionHandle: ((_ type:Int) -> Void)?
     public static let shared = PaymentManager()
     public static let ERROR_CODE_BIOMETRIC_FAILED:Int = -10001
     public static let ERROR_CODE_PASSWORD_FAILED:Int = -10002
     private var sceneListWithoutUI:[PaySceneType] = [.unBind,.checkMnemonicWord,.CreateWallet,.VerificationBiometic,.PayPasswordAuth,.AddNewChain,.CloudBackup,.Sign]
+    public var CompletionHandle: ((_ type:Int) -> Void)?
+    
+    var zapryOptions:ZapryUserInfoModel?
+    
+    public func initOptions(userId:String) {
+        if userId.isEmpty {
+            MMToast.makeToast("userId is empty", isError:true, forView: ZapryUtil.keyWindow())
+            return
+        }
+        self.zapryOptions = ZapryUserInfoModel(userId: userId)
+    }
+    
+    public func checkOptions() -> Bool {
+        var isInit:Bool = false
+        if let options = self.zapryOptions,!options.userId.isEmpty {
+            isInit = true
+        }else {
+            MMToast.makeToast("zapryOptions is not initialized", isError:true, forView: ZapryUtil.keyWindow())
+        }
+        return isInit
+    }
+    
+    public func getUserIdFromOptions() -> String {
+        guard let option = self.zapryOptions else {
+            return ""
+        }
+        return option.userId
+    }
     
     public func setPayAuth(type:Int,password:String,isSaveWallet:Bool,completion:@escaping (Bool,String)->Void) {
+        guard self.checkOptions() else {
+            return
+        }
         if type == 1 || type == 2 {
             DeviceInfo.authByFaceIDOrTouchID {[weak self] error in
                 if let err = error {
@@ -65,18 +112,11 @@ public class PaymentManager: NSObject {
         }
     }
     
-    func transferToSecurityStore(type:Int,isSave:Bool,password:String) {
-        let verificationType = VerificationType(rawValue: type) ?? .none
-        if isSave {
-            let success = WalletManager.transferToSecurityStoreIfNeeded(targetType: verificationType,walletModel: nil,password: password)
-            if success {
-                UserConfig.save(type:verificationType)
-            }else {
-                //保存不成功
-                print("switch \(verificationType.rawValue) Verification fail:save keychain failed")
-                MMToast.makeToast("Set failed",isError:true, forView: ZapryUtil.keyWindow())
-            }
+    public func setMultiWalletInfo(mnemonic:String,wallet:[String: Any],password:String,backupID:String?,completion:@escaping (Bool,String)->Void) {
+        guard self.checkOptions() else {
+            return
         }
+        WalletManager.setMultiWalletInfo(mnemonic:mnemonic, wallet: wallet, password: password, backupID: backupID, completion: completion)
     }
     
     public func checkBeforeSet(completion:@escaping (Int,String,String) -> Void) {
@@ -89,7 +129,10 @@ public class PaymentManager: NSObject {
     }
     
     func checkBeforePayOrSet(hasSet:Bool,forceSetPassworld:Bool = false, sceneType:PaySceneType = .none,payModel:PayModel = PayModel(),completion:@escaping (Int,String,String) -> Void) {
-        let verificationType = UserConfig.read()
+        guard self.checkOptions() else {
+            return
+        }
+        let verificationType = PaymentManager.shared.getPaymentVerificationMethod()
         let window = ZapryUtil.keyWindow()
         if verificationType.rawValue <= 0 {
             //获取异常的处理
@@ -137,6 +180,18 @@ public class PaymentManager: NSObject {
         }
     }
     
+    public func deleteWallet() {
+        guard self.checkOptions() else {
+            return
+        }
+        WalletManager.deleteWallet()
+        PaymentManager.shared.savePaymentVerificationMethod(type: .none)
+    }
+    
+    public func getMultiAddress() -> [String: String]? {
+        return WalletManager.getMultiAddress()
+    }
+    
     public func getPrivateKey(json: String, chainCode: String) -> String {
         var privateKey = ""
         let code = WalletManager.getChainCode(chainCode: chainCode)
@@ -150,6 +205,26 @@ public class PaymentManager: NSObject {
         let code = WalletManager.getChainCode(chainCode: chainCode)
         let address = WalletManager.getWalletAddress(chainCode: code)
         return address
+    }
+    
+    public func getPaymentVerificationMethod() -> VerificationType {
+        guard let option = self.zapryOptions,!option.userId.isEmpty else {
+            return .none
+        }
+        let saveKey:String  = "PaymentVerificationType_\(option.userId)"
+        var type = 0
+        if let value = UserDefaultsUtil.readObject(key:saveKey) as? Int {
+            type = value
+        }
+        return VerificationType(rawValue: type) ?? .none
+    }
+    
+   public func savePaymentVerificationMethod(type:VerificationType) {
+       guard self.checkOptions() else {
+           return
+       }
+       let saveKey:String  = "PaymentVerificationType_\(self.zapryOptions?.userId ?? "")"
+        UserDefaultsUtil.saveObject(object: type.rawValue, key: saveKey)
     }
     
     private func showAlertByNoSetVerifityType(hasSet:Bool,forceSetPassworld:Bool,sceneType:PaySceneType,payModel:PayModel,completion:@escaping (Int,String,String) -> Void) {
@@ -198,6 +273,20 @@ public class PaymentManager: NSObject {
             completion(CheckAction.success.rawValue,walletJson,"")
         }else {
             completion(CheckAction.fail.rawValue,"","")
+        }
+    }
+    
+    private func transferToSecurityStore(type:Int,isSave:Bool,password:String) {
+        let verificationType = VerificationType(rawValue: type) ?? .none
+        if isSave {
+            let success = WalletManager.transferToSecurityStoreIfNeeded(targetType: verificationType,walletModel: nil,password: password)
+            if success {
+                PaymentManager.shared.savePaymentVerificationMethod(type: verificationType)
+            }else {
+                //保存不成功
+                print("switch \(verificationType.rawValue) Verification fail:save keychain failed")
+                MMToast.makeToast("Set failed",isError:true, forView: ZapryUtil.keyWindow())
+            }
         }
     }
 }

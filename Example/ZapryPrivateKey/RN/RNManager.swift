@@ -244,7 +244,7 @@ extension RNManager {
             }
         }
         let sceneType = PaySceneType(rawValue:payType) ?? .none
-        let verificationType = UserConfig.read()
+        let verificationType = PaymentManager.shared.getPaymentVerificationMethod()
         let whiteList:[PaySceneType] = [.CloudBackup,.PayPasswordAuth,.CreateWallet]
         if verificationType == .password && (whiteList.contains(sceneType)) {
             RNManager.shared.payPasswordForSet = payModel.payPassword
@@ -313,7 +313,7 @@ extension RNManager {
             backupID = buID
         }
         let password = RNManager.shared.payPasswordForSet ?? ""
-        WalletManager.setMultiWalletInfo(mnemonic:mnemonic, wallet: wallet, password: password, backupID: backupID) { result, msg in
+        PaymentManager.shared.setMultiWalletInfo(mnemonic: mnemonic, wallet: wallet, password: password, backupID: backupID) { result, msg in
             if result {
                 resolver?("0")
             }else {
