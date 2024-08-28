@@ -36,8 +36,10 @@ public class PayModel:NSObject,HandyJSON {
 @objcMembers
 public class ZapryUserInfoModel:NSObject {
     public var userId:String
-    public init(userId:String) {
+    public var lan:ZaprySDKLanguange = .en
+    public init(userId:String,language:ZaprySDKLanguange = .en) {
         self.userId = userId
+        self.lan = language
     }
 }
 
@@ -61,12 +63,21 @@ public class ZapryPrivateKeyHelper: NSObject {
     
     var zapryOptions:ZapryUserInfoModel?
     
-    public func initOptions(userId:String) {
+    public func initOptions(userId:String,language:ZaprySDKLanguange = .en) {
         if userId.isEmpty {
             ZapryUtil.makeToast("userId is empty", isError:true, forView: ZapryUtil.keyWindow())
             return
         }
-        self.zapryOptions = ZapryUserInfoModel(userId: userId)
+        self.zapryOptions = ZapryUserInfoModel(userId: userId,language:language)
+        ZapryUtil.shared.setPreferredLanguage(lan:language)
+    }
+    
+    public func changeLanOptions(lanaguage:ZaprySDKLanguange) {
+        guard self.checkOptions() else {
+            return
+        }
+        self.zapryOptions?.lan = lanaguage
+        ZapryUtil.shared.setPreferredLanguage(lan: lanaguage)
     }
     
     public func checkOptions() -> Bool {

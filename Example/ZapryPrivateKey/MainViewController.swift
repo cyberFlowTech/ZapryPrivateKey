@@ -16,23 +16,23 @@ class MainViewController:UIViewController {
         // Do any additional setup after loading the view.
         let mainRect = UIScreen.main.bounds
         let btnHeight = 60.0
+        let btnWidth = CGRectGetWidth(mainRect)
         let btnOffsetY = 20.0
     
         self.view.addSubview(self.createWalletBtn)
         self.createWalletBtn.frame = CGRectMake(0.0,150.0 ,CGRectGetWidth(mainRect), btnHeight)
         
         self.view.addSubview(self.clickBtn)
-        self.clickBtn.frame = CGRect(x: 0.0, y:CGRectGetMaxY(self.createWalletBtn.frame) + btnOffsetY, width:CGRectGetWidth(mainRect), height: btnHeight)
+        self.clickBtn.frame = CGRect(x: 0.0, y:CGRectGetMaxY(self.createWalletBtn.frame) + btnOffsetY, width:btnWidth, height: btnHeight)
         
         self.view.addSubview(self.deleteWalletBtn)
-        self.deleteWalletBtn.frame = CGRectMake(0.0, CGRectGetMaxY(self.clickBtn.frame) + btnOffsetY, CGRectGetWidth(mainRect), btnHeight)
+        self.deleteWalletBtn.frame = CGRectMake(0.0, CGRectGetMaxY(self.clickBtn.frame) + btnOffsetY,btnWidth, btnHeight)
         
         NotificationCenter.default.addObserver(self, selector:#selector(removeRNVC(notif: )), name:NSNotification.Name("REMOVERNVC"), object:nil)
         NotificationCenter.default.addObserver(self, selector: #selector(gotoVerifictionTypeVC(notif:)), name: NSNotification.Name("GOTO_SET_VERFICATION_TYPE"), object: nil)
         NotificationCenter.default.addObserver(self, selector:#selector(gotoWalletVC(notif:)), name: Notification.Name("GOTOWALLET"), object: nil)
         
-        ZapryPrivateKeyHelper.shared.initOptions(userId:"844097")
-        ZapryUtil.shared.setPreferredLanguage(preLan: "zh-Hans")
+        ZapryPrivateKeyHelper.shared.initOptions(userId:"844097",language:.en)
         self.navigationController?.navigationBar.isHidden = true
     }
     
@@ -94,7 +94,7 @@ class MainViewController:UIViewController {
         RNManager.shared.closeRNVC()
         ZapryUtil.makeToast("Delete Successful", isError:false, forView: ZapryUtil.keyWindow())
     }
-    
+
     lazy var clickBtn:UIButton = {
         let btn = UIButton(type: .custom)
         btn.backgroundColor = .red

@@ -8,14 +8,18 @@
 import Foundation
 import HandyJSON
 
+public enum ZaprySDKLanguange:Int {
+    case en = 0
+    case zh_Hans = 1
+}
+
 public class ZapryUtil {
     public static let shared = ZapryUtil()
     public static let bundle = Bundle(path: Bundle.init(for:ZapryUtil.self).path(forResource: "ZapryPrivateKey", ofType: "bundle") ?? "")
     var languageBundle:Bundle?
     let supportedLanguages = ["zh-Hans","en"]
-    var preferredLanguage:String = "en"
     
-    public func getBundleImage(imageName:String) -> UIImage? {
+    func getBundleImage(imageName:String) -> UIImage? {
         if imageName.isEmpty {
             return nil
         }
@@ -37,16 +41,17 @@ public class ZapryUtil {
         return value ?? ""
     }
     
-    public func setPreferredLanguage(preLan:String) {
-        self.preferredLanguage = preLan
-        var usedLanguage = "en"
-        for language in self.supportedLanguages {
-            if preLan.contains(language) {
-                usedLanguage = language
-                break
-            }
-        }
+    func setPreferredLanguage(lan:ZaprySDKLanguange) {
+        let usedLanguage = self.getLanguageFileName(lan: lan)
         self.languageBundle = Bundle.init(path: Self.bundle?.path(forResource:usedLanguage, ofType: "lproj") ?? "")
+    }
+    
+    private func getLanguageFileName(lan:ZaprySDKLanguange) -> String {
+        var languange:String = "en"
+        if lan == .zh_Hans {
+            languange = "zh-Hans"
+        }
+        return languange
     }
     
     public class func keyWindow() -> UIWindow {
