@@ -319,6 +319,7 @@ extension RNManager {
             }else {
                 reject?("-1",msg, nil)
             }
+            RNManager.shared.payPasswordForSet = ""
         }
     }
     
@@ -331,14 +332,14 @@ extension RNManager {
         if let _ = self.transferToSSCompletion {
             isSaveWallet = false
         }
-        let payPassword = params?["payPassword"] as? String ?? ""
-        PaymentManager.shared.setPayAuth(type: type, password:payPassword,isSaveWallet:isSaveWallet) { result, msg in
+        var password:String = params?["payPassword"] as? String ?? ""
+        if !password.isEmpty {
+            RNManager.shared.payPasswordForSet = password
+        }
+        PaymentManager.shared.setPayAuth(type: type, password:password,isSaveWallet:isSaveWallet) { result, msg in
             if result{
                 if let completion = self.transferToSSCompletion {
                     completion(VerificationType(rawValue: type) ?? .none)
-                }
-                if type == 3 {
-                    RNManager.shared.payPasswordForSet = payPassword;
                 }
                 resolver?(true)
             } else {

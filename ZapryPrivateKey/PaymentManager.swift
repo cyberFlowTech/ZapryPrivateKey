@@ -51,7 +51,7 @@ public class PaymentManager: NSObject {
                     completion(false,errorTip)
                 }else {
                     //成功
-                    self?.transferToSecurityStore(type: type,isSave: isSaveWallet,password: "")
+                    self?.transferToSecurityStore(type: type,isSave: isSaveWallet,password:password)
                     completion(true,"")
                 }
             }
