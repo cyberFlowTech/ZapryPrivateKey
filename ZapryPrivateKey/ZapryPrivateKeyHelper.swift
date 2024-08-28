@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 import HandyJSON
 
-public enum CheckAction:Int {
+public enum ZapryResultAction:Int {
     case none = 0 // 跳过
     case success = 1 //成功
     case fail = 2 //失败
@@ -18,7 +18,7 @@ public enum CheckAction:Int {
 }
 
 @objcMembers
-public class PayModel:NSObject,HandyJSON {
+public class ZapryPayModel:NSObject,HandyJSON {
     public var amount:String = "0.00"
     public var chainCode:String = ""
     public var nick:String = ""
@@ -43,22 +43,13 @@ public class ZapryUserInfoModel:NSObject {
     }
 }
 
-public enum VerificationType:Int {
-    case lock = -2
-    case denyBiometry = -1
-    case none = 0
-    case touchID = 1
-    case faceID = 2
-    case password = 3
-}
-
 
 @objcMembers
 public class ZapryPrivateKeyHelper: NSObject {
     public static let shared = ZapryPrivateKeyHelper()
     public static let ERROR_CODE_BIOMETRIC_FAILED:Int = -10001
     public static let ERROR_CODE_PASSWORD_FAILED:Int = -10002
-    private var sceneListWithoutUI:[PaySceneType] = [.unBind,.checkMnemonicWord,.CreateWallet,.VerificationBiometic,.PayPasswordAuth,.AddNewChain,.CloudBackup,.Sign]
+    private var sceneListWithoutUI:[ZaprySceneType] = [.unBind,.checkMnemonicWord,.CreateWallet,.VerificationBiometic,.PayPasswordAuth,.AddNewChain,.CloudBackup,.Sign]
     public var CompletionHandle: ((_ type:Int) -> Void)?
     
     var zapryOptions:ZapryUserInfoModel?
@@ -134,12 +125,12 @@ public class ZapryPrivateKeyHelper: NSObject {
         self.checkBeforePayOrSet(hasSet: true,completion: completion)
     }
     
-    public func checkBeforePay(sceneType:Int,payModel:PayModel, completion:@escaping (Int,String,String) -> Void) {
-        let type = PaySceneType(rawValue: sceneType) ?? .none
+    public func checkBeforePay(sceneType:Int,payModel:ZapryPayModel, completion:@escaping (Int,String,String) -> Void) {
+        let type = ZaprySceneType(rawValue: sceneType) ?? .none
         self.checkBeforePayOrSet(hasSet: false, sceneType:type,payModel:payModel, completion: completion)
     }
     
-    func checkBeforePayOrSet(hasSet:Bool,forceSetPassworld:Bool = false, sceneType:PaySceneType = .none,payModel:PayModel = PayModel(),completion:@escaping (Int,String,String) -> Void) {
+    func checkBeforePayOrSet(hasSet:Bool,forceSetPassworld:Bool = false, sceneType:ZaprySceneType = .none,payModel:ZapryPayModel = ZapryPayModel(),completion:@escaping (Int,String,String) -> Void) {
         guard self.checkOptions() else {
             return
         }
@@ -157,12 +148,12 @@ public class ZapryPrivateKeyHelper: NSObject {
                 }
             }
             if hasSet {
-                completion(CheckAction.success.rawValue,"","")
+                completion(ZapryResultAction.success.rawValue,"","")
                 return
             }
             
             if ZapryWalletManager.getWalletAddress().count <= 0 && sceneType != .CreateWallet {
-                completion(CheckAction.close.rawValue,"","")
+                completion(ZapryResultAction.close.rawValue,"","")
                 NotificationCenter.default.post(name:Notification.Name("GOTOWALLET"), object:nil, userInfo: nil)
                 return
             }
@@ -218,7 +209,7 @@ public class ZapryPrivateKeyHelper: NSObject {
         return address
     }
     
-    public func getPaymentVerificationMethod() -> VerificationType {
+    public func getPaymentVerificationMethod() -> ZapryDeviceBiometricType {
         guard let option = self.zapryOptions,!option.userId.isEmpty else {
             return .none
         }
@@ -227,10 +218,10 @@ public class ZapryPrivateKeyHelper: NSObject {
         if let value = ZapryUtil.readObject(key:saveKey) as? Int {
             type = value
         }
-        return VerificationType(rawValue: type) ?? .none
+        return ZapryDeviceBiometricType(rawValue: type) ?? .none
     }
     
-   public func savePaymentVerificationMethod(type:VerificationType) {
+   public func savePaymentVerificationMethod(type:ZapryDeviceBiometricType) {
        guard self.checkOptions() else {
            return
        }
@@ -238,7 +229,7 @@ public class ZapryPrivateKeyHelper: NSObject {
        ZapryUtil.saveObject(object: type.rawValue, key: saveKey)
     }
     
-    private func showAlertByNoSetVerifityType(hasSet:Bool,forceSetPassworld:Bool,sceneType:PaySceneType,payModel:PayModel,completion:@escaping (Int,String,String) -> Void) {
+    private func showAlertByNoSetVerifityType(hasSet:Bool,forceSetPassworld:Bool,sceneType:ZaprySceneType,payModel:ZapryPayModel,completion:@escaping (Int,String,String) -> Void) {
         let type = ZapryDeviceInfo.getDeviceBiometricType()
         let hasPassword = forceSetPassworld ? true : (type == .none || type == .denyBiometry || type == .lock)
         
@@ -253,42 +244,42 @@ public class ZapryPrivateKeyHelper: NSObject {
         alertView.confirmHandle = { v in
             let verifyType = hasPassword ? 3 : ZapryDeviceInfo.getDeviceBiometricType().rawValue
             NotificationCenter.default.post(name: NSNotification.Name("GOTO_SET_VERFICATION_TYPE"), object: nil, userInfo: ["type":verifyType])
-            completion(CheckAction.close.rawValue,"","")
+            completion(ZapryResultAction.close.rawValue,"","")
         }
         alertView.cancelHandle = { v in
             if !hasPassword {
                 self.checkBeforePayOrSet(hasSet: hasSet,forceSetPassworld: true,sceneType: sceneType,payModel: payModel, completion: completion)
                 return
             }
-            completion(CheckAction.close.rawValue,"","")
+            completion(ZapryResultAction.close.rawValue,"","")
         }
         alertView.show()
     }
     
-    private func getWalletThatAuthByPayPassword(sceneType:PaySceneType,payModel:PayModel,completion:@escaping (Int,String,String) -> Void) {
+    private func getWalletThatAuthByPayPassword(sceneType:ZaprySceneType,payModel:ZapryPayModel,completion:@escaping (Int,String,String) -> Void) {
         var pas:String?
         if (ZaprySecurityStore.hasWalletThatAuthByPayPassword() ) {
             pas = ZaprySecurityStore.getWalletThatAuthByPayPassword(payPassword:payModel.payPassword)
         }
         if let value = pas,!value.isEmpty {
-            completion(CheckAction.success.rawValue,value,"")
+            completion(ZapryResultAction.success.rawValue,value,"")
         }else {
-            completion(CheckAction.fail.rawValue,"","")
+            completion(ZapryResultAction.fail.rawValue,"","")
         }
     }
     
-    private func authByFaceIDOrTouchID(sceneType:PaySceneType,payModel:PayModel,completion:@escaping (Int,String,String) -> Void) {
+    private func authByFaceIDOrTouchID(sceneType:ZaprySceneType,payModel:ZapryPayModel,completion:@escaping (Int,String,String) -> Void) {
         let model = ZapryWalletManager.getWalletModel(password: "")
         if let model = model {
             let walletJson = ZapryWalletManager.modelToStr(model:model) ?? ""
-            completion(CheckAction.success.rawValue,walletJson,"")
+            completion(ZapryResultAction.success.rawValue,walletJson,"")
         }else {
-            completion(CheckAction.fail.rawValue,"","")
+            completion(ZapryResultAction.fail.rawValue,"","")
         }
     }
     
     private func transferToSecurityStore(type:Int,isSave:Bool,password:String) {
-        let verificationType = VerificationType(rawValue: type) ?? .none
+        let verificationType = ZapryDeviceBiometricType(rawValue: type) ?? .none
         if isSave {
             let success = ZapryWalletManager.transferToSecurityStoreIfNeeded(targetType: verificationType,walletModel: nil,password: password)
             if success {

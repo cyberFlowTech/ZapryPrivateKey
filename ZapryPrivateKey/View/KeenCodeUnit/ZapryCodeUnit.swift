@@ -7,7 +7,7 @@
 
 import UIKit
 
-public extension KeenCodeUnitAttributes {
+public extension ZapryCodeUnitAttributes {
     
     /// 样式
     enum Style {
@@ -21,13 +21,13 @@ public extension KeenCodeUnitAttributes {
 }
 
 //MARK: - 属性参数
-public struct KeenCodeUnitAttributes {
+public struct ZapryCodeUnitAttributes {
     
     /// 视图背景色 默认 white
     public var viewBackColor: UIColor = UIColor.white
     
     /// 样式 默认 splitline
-    public var style: KeenCodeUnitAttributes.Style = .splitline
+    public var style: ZapryCodeUnitAttributes.Style = .splitline
     
     /// 位数 默认 6 位
     public var count: Int = 6
@@ -93,7 +93,7 @@ public protocol ZapryCodeUnitDelegate: AnyObject {
     
     /// 属性参数 可选 不设置取默认值
     /// - Returns: 属性对象
-    func attributesOfCodeUnit(for codeUnit: ZapryCodeUnit) -> KeenCodeUnitAttributes
+    func attributesOfCodeUnit(for codeUnit: ZapryCodeUnit) -> ZapryCodeUnitAttributes
     
     /// 输入回调事件 优先级高于闭包回调
     func codeUnit(_ codeUnit: ZapryCodeUnit, codeText: String, complete: Bool)
@@ -101,8 +101,8 @@ public protocol ZapryCodeUnitDelegate: AnyObject {
 
 public extension ZapryCodeUnitDelegate {
     
-    func attributesOfCodeUnit(for codeUnit: ZapryCodeUnit) -> KeenCodeUnitAttributes {
-        return KeenCodeUnitAttributes()
+    func attributesOfCodeUnit(for codeUnit: ZapryCodeUnit) -> ZapryCodeUnitAttributes {
+        return ZapryCodeUnitAttributes()
     }
 }
 
@@ -119,11 +119,11 @@ public class ZapryCodeUnit: UIView {
     /// 文本框
     private lazy var fileds: [UITextField] = []
     /// 属性参数
-    private lazy var attributes: KeenCodeUnitAttributes = {
+    private lazy var attributes: ZapryCodeUnitAttributes = {
         if let d = delegate {
             return d.attributesOfCodeUnit(for: self)
         }else {
-            return KeenCodeUnitAttributes()
+            return ZapryCodeUnitAttributes()
         }
     }()
     /// 输入回调 优先级低于代理回调
@@ -164,7 +164,7 @@ public class ZapryCodeUnit: UIView {
     ///   - attributes: 属性参数 若为 nil 取默认值
     public init(
         frame: CGRect,
-        attributes: KeenCodeUnitAttributes? = nil
+        attributes: ZapryCodeUnitAttributes? = nil
     ) {
         super.init(frame: frame)
         if let attr = attributes { self.attributes = attr }
@@ -178,7 +178,7 @@ public class ZapryCodeUnit: UIView {
     ///   - callback: 输入回调事件
     public init(
         frame: CGRect,
-        attributes: KeenCodeUnitAttributes?,
+        attributes: ZapryCodeUnitAttributes?,
         callback: @escaping ((String, Bool) -> ())
     ) {
         super.init(frame: frame)

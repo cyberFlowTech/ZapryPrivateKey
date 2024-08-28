@@ -196,12 +196,12 @@ import CryptoSwift
     static func getWalletThatAuthByBackupPassword(backupID: String, backupPassword: String) throws -> String {
         let query = ZaprySecurityStore.backupGetDic(server: backupID)
         guard let data = ZaprySecurityStore.getSSItem(query: query) else {
-            throw MMSecurityStoreError.queryError
+            throw ZaprySecurityStoreError.queryError
         }
         if let WK = String(data: data, encoding: .utf8) {
             return try ZaprySecurityStore.decryptWithThrows(encryptValue: WK, key: backupPassword)
         } else {
-            throw MMSecurityStoreError.encodeError
+            throw ZaprySecurityStoreError.encodeError
         }
     }
     static func deleteWalletThatAuthByBackupPassword(backupID: String) -> Bool {
@@ -329,17 +329,17 @@ import CryptoSwift
     }
     
     static func decryptWithThrows(encryptValue: String, key: String) throws -> String {
-        guard let aes = getAES(r: key) else { throw MMSecurityStoreError.getAESError }
-        guard let result = try? encryptValue.decryptBase64(cipher: aes) else { throw MMSecurityStoreError.decryptError }
+        guard let aes = getAES(r: key) else { throw ZaprySecurityStoreError.getAESError }
+        guard let result = try? encryptValue.decryptBase64(cipher: aes) else { throw ZaprySecurityStoreError.decryptError }
         if let ret = String(data: Data(result), encoding: .utf8) {
             return ret
         } else {
-            throw MMSecurityStoreError.encodeError
+            throw ZaprySecurityStoreError.encodeError
         }
     }
 }
 
-public enum MMSecurityStoreError: Error {
+public enum ZaprySecurityStoreError: Error {
     case getAESError
     case decryptError
     case queryError

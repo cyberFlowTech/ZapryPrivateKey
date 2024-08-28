@@ -8,7 +8,7 @@
 import Foundation
 import KeychainAccess
 
-public struct WalletModel: Codable {
+public struct ZapryWalletModel: Codable {
     public var mnemonic: String = ""
     public var accountAddress: String = ""
     public var accountPrivateKey: String = ""
@@ -53,8 +53,8 @@ public struct WalletModel: Codable {
         }
     }
     
-    static func getWalletModel(password:String) -> WalletModel? { // 注意如果是支付密码方式，需要有密码
-        var model: WalletModel? = nil
+    static func getWalletModel(password:String) -> ZapryWalletModel? { // 注意如果是支付密码方式，需要有密码
+        var model: ZapryWalletModel? = nil
         let type = ZapryPrivateKeyHelper.shared.getPaymentVerificationMethod()
         switch type {
         case .faceID, .touchID:
@@ -81,15 +81,15 @@ public struct WalletModel: Codable {
     
     static func saveWallet(mnemonic: String, multiWalletInfo: [String: Any],password:String) -> Bool {
         guard let info = ZapryJSONUtil.dicToJsonString(dic: multiWalletInfo) else { return false }
-        var model = WalletModel()
+        var model = ZapryWalletModel()
         model.mnemonic = mnemonic
         model.multiWalletInfo = info
         let type = ZapryPrivateKeyHelper.shared.getPaymentVerificationMethod()
         return ZapryWalletManager.saveModelToSecurityStore(model: model, targetType: type,password: password)
     }
     
-    static func transferToSecurityStoreIfNeeded(targetType: VerificationType, walletModel:WalletModel?,password:String) -> Bool { // 如果安全存储中没有，会从旧存储中读取并迁移到安全存储中
-        var model:WalletModel?
+    static func transferToSecurityStoreIfNeeded(targetType: ZapryDeviceBiometricType, walletModel:ZapryWalletModel?,password:String) -> Bool { // 如果安全存储中没有，会从旧存储中读取并迁移到安全存储中
+        var model:ZapryWalletModel?
         if let walletModel = walletModel {
             model = walletModel
         }else {
@@ -115,7 +115,7 @@ public struct WalletModel: Codable {
         return false
     }
     
-    static func saveModelToSecurityStore(model: WalletModel, targetType: VerificationType,password:String) -> Bool {
+    static func saveModelToSecurityStore(model: ZapryWalletModel, targetType: ZapryDeviceBiometricType,password:String) -> Bool {
         ZapryUtil.saveObject(object: "", key: ZapryWalletManager.kAddressKey)
         var success = false
         let encoder = JSONEncoder()
@@ -209,7 +209,7 @@ public struct WalletModel: Codable {
         return nil
     }
     
-    public static func getMultiAddressFromModel(model: WalletModel) -> [String: String]? {
+    public static func getMultiAddressFromModel(model: ZapryWalletModel) -> [String: String]? {
         var result: [String: String] = [:]
         let multi = model.multiWalletInfo
         guard let info = ZapryJSONUtil.stringToDic(multi) else { return nil }
@@ -221,10 +221,10 @@ public struct WalletModel: Codable {
         return result
     }
     
-    public static func stringToModel(s: String, chainCode: String = "2000000") -> WalletModel? {
+    public static func stringToModel(s: String, chainCode: String = "2000000") -> ZapryWalletModel? {
         let decoder = JSONDecoder()
         guard let data = s.data(using: .utf8) else { return nil }
-        guard var model = try? decoder.decode(WalletModel.self, from: data) else { return nil }
+        guard var model = try? decoder.decode(ZapryWalletModel.self, from: data) else { return nil }
         guard let info = ZapryJSONUtil.stringToDic(model.multiWalletInfo) else { return nil }
         for (key, value) in info {
             if chainCode == key {
@@ -237,7 +237,7 @@ public struct WalletModel: Codable {
         return model
     }
     
-    public static func modelToStr(model:WalletModel) -> String? {
+    public static func modelToStr(model:ZapryWalletModel) -> String? {
         let encoder = JSONEncoder()
         guard let data = try? encoder.encode(model) else { return nil }
         guard let modelStr = String(data: data, encoding: .utf8) else { return nil }

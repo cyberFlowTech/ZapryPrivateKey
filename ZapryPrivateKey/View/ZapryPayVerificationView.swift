@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-public enum PaySceneType:Int {
+public enum ZaprySceneType:Int {
     case none = 0
     case TransferAccount = 1 //转账
     case Transaction = 2 //合约交易
@@ -25,26 +25,20 @@ public enum PaySceneType:Int {
     case VerificationBiometic = 14 //设置密码 验证生物识别
 }
 
-public enum TronSignType:Int {
-    case Sign = 1
-    case Transfer = 2
-    case Approve = 3
-}
-
 public class ZapryPayVerificationView:UIView {
     let tagPrex = 200000
     
-    var finishedCallback: ((CheckAction,String,String) -> Void)?
+    var finishedCallback: ((ZapryResultAction,String,String) -> Void)?
     
-    var verificationModel:VerificationType
-    var paySceneType:PaySceneType
-    var payModel:PayModel = PayModel()
+    var verificationModel:ZapryDeviceBiometricType
+    var paySceneType:ZaprySceneType
+    var payModel:ZapryPayModel = ZapryPayModel()
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    init(frame:CGRect,mode:VerificationType,payScene:PaySceneType,payModel:PayModel = PayModel()) {
+    init(frame:CGRect,mode:ZapryDeviceBiometricType,payScene:ZaprySceneType,payModel:ZapryPayModel = ZapryPayModel()) {
         self.verificationModel = mode
         self.paySceneType = payScene
         self.payModel = payModel
@@ -266,7 +260,7 @@ public class ZapryPayVerificationView:UIView {
         return str
     }
     
-    class func checkPayPopupView(payScene:PaySceneType) -> ZapryPayVerificationView? {
+    class func checkPayPopupView(payScene:ZaprySceneType) -> ZapryPayVerificationView? {
         let window = ZapryUtil.keyWindow()
         if let view = window.viewWithTag(200000) as? ZapryPayVerificationView,view.paySceneType == payScene,!view.isHidden {
             return view
@@ -436,8 +430,8 @@ public class ZapryPayVerificationView:UIView {
 
 extension ZapryPayVerificationView:ZapryCodeUnitDelegate {
     
-    public func attributesOfCodeUnit(for codeUnit: ZapryCodeUnit) -> KeenCodeUnitAttributes {
-        var attr = KeenCodeUnitAttributes()
+    public func attributesOfCodeUnit(for codeUnit: ZapryCodeUnit) -> ZapryCodeUnitAttributes {
+        var attr = ZapryCodeUnitAttributes()
         attr.style = .splitborder
         attr.isSingleAlive = true
         attr.itemSpacing = 8

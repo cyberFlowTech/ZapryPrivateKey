@@ -9,6 +9,15 @@ import Foundation
 import UIKit
 import LocalAuthentication
 
+public enum ZapryDeviceBiometricType:Int {
+    case lock = -2
+    case denyBiometry = -1
+    case none = 0
+    case touchID = 1
+    case faceID = 2
+    case password = 3
+}
+
 public class ZapryDeviceInfo {
     
     public static var idfv: String {
@@ -57,7 +66,7 @@ public class ZapryDeviceInfo {
         }
     }
     
-    public static func getDeviceBiometricType() -> VerificationType {
+    public static func getDeviceBiometricType() -> ZapryDeviceBiometricType {
         var error: NSError?
         guard LAContext().canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
             if error?.code == -8 {

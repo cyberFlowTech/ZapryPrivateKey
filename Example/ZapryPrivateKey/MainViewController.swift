@@ -47,7 +47,7 @@ class MainViewController:UIViewController {
     @objc func gotoVerifictionTypeVC(notif:Notification) {
         if let userInfo = notif.userInfo,let type = userInfo["type"] as? Int {
             if type >= 1 {
-                RNManager.shared.pushToSetPayAuth(vc: self, type: VerificationType(rawValue: type) ?? .password, params: ["from":"Setting"])
+                RNManager.shared.pushToSetPayAuth(vc: self, type: ZapryDeviceBiometricType(rawValue: type) ?? .password, params: ["from":"Setting"])
             }
         }
     }
@@ -62,10 +62,10 @@ class MainViewController:UIViewController {
             ZapryUtil.makeToast("未创建钱包",isError: true, forView:ZapryUtil.keyWindow())
             return 
         }
-        let payModel = PayModel()
+        let payModel = ZapryPayModel()
         payModel.amount = "-0.03"
         payModel.token = ["token":"ETH"]
-        let payScene:PaySceneType = .SendRedpacket
+        let payScene:ZaprySceneType = .SendRedpacket
         payModel.signType = payScene.rawValue
 //        let chainCode = "20000"
 //        payModel.chainCode = chainCode

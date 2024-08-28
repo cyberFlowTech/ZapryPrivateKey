@@ -90,7 +90,7 @@ class RNManager: NSObject, RCTBridgeModule, RCTBridgeDelegate {
     var rnDidShowContent:Bool = false
     var bridge:RCTBridge?
     var completionHandle:((Bool,String,NSError?)->Void)?
-    var transferToSSCompletion:((VerificationType)->Void)?
+    var transferToSSCompletion:((ZapryDeviceBiometricType)->Void)?
     var rnVCManager:RNBaseViewController?
     //shytodo 临时暂放这里，后期需要去掉
     var payPasswordForSet: String?
@@ -123,7 +123,7 @@ class RNManager: NSObject, RCTBridgeModule, RCTBridgeDelegate {
        
        var params = ZapryJSONUtil.stringToDic(json)
        let biometricType = ZapryDeviceInfo.getDeviceBiometricType()
-       params?["supportAuthType"] = (biometricType == .none || biometricType == .denyBiometry || biometricType == .lock) ? VerificationType.password.rawValue : biometricType.rawValue
+       params?["supportAuthType"] = (biometricType == .none || biometricType == .denyBiometry || biometricType == .lock) ? ZapryDeviceBiometricType.password.rawValue : biometricType.rawValue
         if page != .backend {
             self.rnInitialProperties = params
         }
@@ -157,7 +157,7 @@ class RNManager: NSObject, RCTBridgeModule, RCTBridgeDelegate {
         #endif
     }
     
-    func pushToSetPayAuth(vc: UIViewController?, type:VerificationType, params: [String: Any] = [:]) {
+    func pushToSetPayAuth(vc: UIViewController?, type:ZapryDeviceBiometricType, params: [String: Any] = [:]) {
         var page:RNPage = .PayPasswordSetting
         var dict:[String:Any] = [String:Any]()
         if type == .faceID || type == .touchID {
@@ -235,22 +235,22 @@ extension RNManager {
             return
         }
         let payType = params["payType"] as? Int ?? 1
-        var payModel = PayModel()
+        var payModel = ZapryPayModel()
         //转账
         if let data = params["data"] as? [String:Any] {
-            let tempModel = ZapryJSONUtil.dictionaryToModel(data, PayModel.self)
+            let tempModel = ZapryJSONUtil.dictionaryToModel(data, ZapryPayModel.self)
             if let model = tempModel {
                 payModel = model
             }
         }
-        let sceneType = PaySceneType(rawValue:payType) ?? .none
+        let sceneType = ZaprySceneType(rawValue:payType) ?? .none
         let verificationType = ZapryPrivateKeyHelper.shared.getPaymentVerificationMethod()
-        let whiteList:[PaySceneType] = [.CloudBackup,.PayPasswordAuth,.CreateWallet]
+        let whiteList:[ZaprySceneType] = [.CloudBackup,.PayPasswordAuth,.CreateWallet]
         if verificationType == .password && (whiteList.contains(sceneType)) {
             RNManager.shared.payPasswordForSet = payModel.payPassword
         }
         ZapryPrivateKeyHelper.shared.checkBeforePay(sceneType:sceneType.rawValue, payModel: payModel) {[weak self] action,result, error in
-            let checkAction = CheckAction(rawValue: action)
+            let checkAction = ZapryResultAction(rawValue: action)
             if checkAction == .success {
                 if sceneType == .checkMnemonicWord {
                     var dict = [String:Any]()
@@ -339,7 +339,7 @@ extension RNManager {
         ZapryPrivateKeyHelper.shared.setPayAuth(type: type, password:password,isSaveWallet:isSaveWallet) { result, msg in
             if result{
                 if let completion = self.transferToSSCompletion {
-                    completion(VerificationType(rawValue: type) ?? .none)
+                    completion(ZapryDeviceBiometricType(rawValue: type) ?? .none)
                 }
                 resolver?(true)
             } else {
