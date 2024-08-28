@@ -43,3 +43,5 @@ shy todo
     设置生物识别的时候验证密码(payType:10)，
     加链(payType:11)，
     保存icloud(payType:12)
+    
+shy test分支：origin/feature/Wallet_sdk_0828
