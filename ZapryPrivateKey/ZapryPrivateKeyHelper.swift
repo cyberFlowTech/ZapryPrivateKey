@@ -194,20 +194,20 @@ public class ZapryPrivateKeyHelper: NSObject {
         return ZapryWalletManager.getMultiAddress()
     }
     
-    public func getPrivateKey(json: String, chainCode: String) -> String {
-        var privateKey = ""
-        let code = ZapryWalletManager.getChainCode(chainCode: chainCode)
-        if let model = ZapryWalletManager.stringToModel(s:json, chainCode: code) {
-            privateKey = model.accountPrivateKey
-        }
-        return privateKey
-    }
+//    public func getPrivateKey(json: String, chainCode: String) -> String {
+//        var privateKey = ""
+//        let code = ZapryWalletManager.getChainCode(chainCode: chainCode)
+//        if let model = ZapryWalletManager.stringToModel(s:json, chainCode: code) {
+//            privateKey = model.accountPrivateKey
+//        }
+//        return privateKey
+//    }
     
-    public func getWalletAddress(chainCode: String) -> String {
-        let code = ZapryWalletManager.getChainCode(chainCode: chainCode)
-        let address = ZapryWalletManager.getWalletAddress(chainCode: code)
-        return address
-    }
+//    public func getWalletAddress(chainCode: String) -> String {
+//        let code = ZapryWalletManager.getChainCode(chainCode: chainCode)
+//        let address = ZapryWalletManager.getWalletAddress(chainCode: code)
+//        return address
+//    }
     
     public func getPaymentVerificationMethod() -> ZapryDeviceBiometricType {
         guard let option = self.zapryOptions,!option.userId.isEmpty else {
