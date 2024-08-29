@@ -259,6 +259,41 @@ public class ZapryPrivateKeyHelper: NSObject {
        ZapryUtil.saveObject(object: type.rawValue, key: saveKey)
     }
     
+    public func getUndecryptWalletsThatAuthByBackupPassword() -> Dictionary<String,String> {
+        let ret = ZaprySecurityStore.getUndecryptWalletsThatAuthByBackupPassword()
+        return ret
+    }
+    
+    public func getWalletThatAuthByBackupPassword(backupID: String, backupPassword: String) throws -> String {
+        let result = try ZaprySecurityStore.getWalletThatAuthByBackupPassword(backupID: backupID, backupPassword: backupPassword)
+        return result
+    }
+    
+    public func deleteWalletThatAuthByBackupPassword(backupID: String) -> Bool {
+        let result = ZaprySecurityStore.deleteWalletThatAuthByBackupPassword(backupID: backupID)
+        return result
+    }
+    
+    public func getWalletThatAuthByBiometric() -> String? {
+        let result = ZaprySecurityStore.getWalletThatAuthByBiometric()
+        return result
+    }
+    
+    public func getWalletThatAuthByPayPassword(payPassword: String) -> String? {
+        let result = ZaprySecurityStore.getWalletThatAuthByPayPassword(payPassword: payPassword)
+        return result
+    }
+    
+    public func decrypt(encryptValue: String, key: String) -> String? {
+        let result = ZaprySecurityStore.decrypt(encryptValue: encryptValue, key: key)
+        return result
+    }
+    
+    public func deleteWalletThatAuthByBiometric() -> Bool {
+        let result = ZaprySecurityStore.deleteWalletThatAuthByBiometric()
+        return result
+    }
+    
     private func showAlertByNoSetVerifityType(hasSet:Bool,forceSetPassworld:Bool,sceneType:ZaprySceneType,payModel:ZapryPayModel,completion:@escaping (Int,String,String) -> Void) {
         let type = ZapryDeviceInfo.getDeviceBiometricType()
         let hasPassword = forceSetPassworld ? true : (type == .none || type == .denyBiometry || type == .lock)
