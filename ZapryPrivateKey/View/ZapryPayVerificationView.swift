@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import SnapKit
 
 public enum ZaprySceneType:Int {
     case none = 0
@@ -23,9 +24,10 @@ public enum ZaprySceneType:Int {
     case AddNewChain = 11 //加链
     case CloudBackup = 12 //保存
     case VerificationBiometic = 14 //设置密码 验证生物识别
+    case Intent = 20 //支付
 }
 
-public class ZapryPayVerificationView:UIView {
+class ZapryPayVerificationView:UIView {
     let tagPrex = 200000
     
     var finishedCallback: ((ZapryResultAction,String,String) -> Void)?
@@ -57,8 +59,9 @@ public class ZapryPayVerificationView:UIView {
         let ty = keyboardRect.size.height
         UIView.animate(withDuration: 0.25) {
             self.backgroundColor = UIColor(hexString: "#000000", alpha: 0.8)
-            let contentRect = self.contentView.frame
-            self.contentView.frame = CGRectMake(CGRectGetMinX(contentRect),CGRectGetHeight(UIScreen.main.bounds) - ty + 20.0 - CGRectGetHeight(contentRect), CGRectGetWidth(contentRect), CGRectGetHeight(contentRect))
+            self.contentView.snp.updateConstraints { make in
+                make.bottom.equalTo(self.snp.bottom).offset(-ty+20)
+            }
             self.contentView.superview?.layoutIfNeeded()
         } completion: { finished in
            
@@ -67,9 +70,10 @@ public class ZapryPayVerificationView:UIView {
     
     @objc func keyboardWillHide() {
         UIView.animate(withDuration: 0.25) {
-            self.backgroundColor = UIColor.clear
-            let contentRect = self.contentView.frame
-            self.contentView.frame = CGRectMake(CGRectGetMinX(contentRect),CGRectGetHeight(UIScreen.main.bounds) + 295.0, CGRectGetWidth(contentRect), CGRectGetHeight(contentRect))
+            self.backgroundColor = .clear
+            self.contentView.snp.updateConstraints { make in
+                make.bottom.equalTo(self.snp.bottom).offset(295.0)
+            }
             self.contentView.superview?.layoutIfNeeded()
         } completion: { finished in
             self.isHidden = true
@@ -137,7 +141,7 @@ public class ZapryPayVerificationView:UIView {
         self.titleLabel.text = title
         var payAmount = self.payModel.amount
         let token:[String:Any]? = self.payModel.token
-        var payUnit:String = token?["token"] as? String ?? "ETMP"
+        var payUnit:String = " \(token?["token"] as? String ?? "ETMP")"
         if self.paySceneType == .SendRedpacket {
             title = ZapryNSI18n.shared.biometric_sending_crypto
         } else if self.paySceneType == .TransferAccount {
@@ -145,21 +149,23 @@ public class ZapryPayVerificationView:UIView {
             isNFT = self.payModel.nftTokenId.count > 0
             let nick = self.payModel.nick.isEmpty ? "" :  "[\(self.payModel.nick)]"
             if isNFT {
-                title = String(format:ZapryNSI18n.shared.biometric_transferring_nft,nick,addressToStr)
+                title = String(format: ZapryNSI18n.shared.biometric_transferring_nft,nick,addressToStr)
                 payUnit = (self.payModel.nftName)
                 payAmount = ""
                 let tokenId = self.getShowAddress(address:self.payModel.nftTokenId,minCount:16,preNum: 5,sufNum: 5)
                 self.nftTokenIdLabel.text = tokenId.count > 0 ? "#\(tokenId)" : tokenId
             }else {
-                title = String(format:ZapryNSI18n.shared.biometric_transferring,nick,addressToStr)
+                title = String(format: ZapryNSI18n.shared.biometric_transferring,nick,addressToStr)
             }
             
         }else if self.paySceneType == .RechargeToChangePocket {
-            title =  ZapryNSI18n.shared.biometric_top_up
+            title = ZapryNSI18n.shared.biometric_top_up
         }else if self.paySceneType == .WithdrawToWallet {
-            title = String(format:ZapryNSI18n.shared.withdraw_wallet_tip, self.payModel.to)
+            let toStr = self.getShowAddress(address: self.payModel.to,minCount: 11,preNum: 6,sufNum: 5)
+            title = String(format: ZapryNSI18n.shared.withdraw_wallet_tip,toStr)
         }else if self.paySceneType == .Transaction {
-            title = String(format:ZapryNSI18n.shared.biometric_transferring,"",self.payModel.to)
+            let toStr = self.getShowAddress(address: self.payModel.to,minCount: 11,preNum: 6,sufNum: 5)
+            title = String(format: ZapryNSI18n.shared.biometric_transferring,"",toStr)
             payUnit = ZapryNSI18n.shared.biometric_contract_trading
             payAmount = ""
         }else if self.paySceneType == .Sign {
@@ -176,36 +182,44 @@ public class ZapryPayVerificationView:UIView {
                     payUnit = ZapryNSI18n.shared.signature_message_sign
                 }
                 if !title.isEmpty {
-                    title = String(format:ZapryNSI18n.shared.biometric_transferring,"",title)
+                    title = String(format: ZapryNSI18n.shared.biometric_transferring,"",title)
                 }
             } else {
                 if !self.payModel.to.isEmpty {
-                    title = String(format:ZapryNSI18n.shared.biometric_transferring,"",self.payModel.to)
+                    let toStr = self.getShowAddress(address: self.payModel.to,minCount: 11,preNum: 6,sufNum: 5)
+                    title = String(format: ZapryNSI18n.shared.biometric_transferring,"",self.payModel.to)
                 }else {
                     title = ""
                 }
                 payUnit = ZapryNSI18n.shared.signature_message_sign
             }
             payAmount = ""
+        } else if (self.paySceneType == .Intent) {
+            title = ZapryNSI18n.shared.flash_exchange_in_progress
         }
         var contentHeight = self.verificationModel == .password ? ((isNFT ? 320 : 294) + 20) : (536.0 + (isNFT ? 26 : 0))
-        let payDescRect = self.payDescLabel.frame
-        let paynumRect = self.payNumLabel.frame
         if !title.isEmpty {
             self.payDescLabel.text = title
-            self.payDescLabel.frame = CGRectMake(CGRectGetMinX(payDescRect), CGRectGetMinY(payDescRect),CGRectGetWidth(payDescRect), 30.0)
-
-            self.payNumLabel.frame = CGRectMake(CGRectGetMinX(paynumRect),CGRectGetMaxY(self.payDescLabel.frame) + 8.0, CGRectGetWidth(paynumRect), CGRectGetHeight(paynumRect))
+            self.payDescLabel.snp.updateConstraints { make in
+                make.height.equalTo(31)
+            }
+            self.payNumLabel.snp.updateConstraints { make in
+                make.top.equalTo(self.payDescLabel.snp.bottom).offset(8)
+            }
         }else {
             self.payDescLabel.text = ""
-            self.payDescLabel.frame = CGRectMake(CGRectGetMinX(payDescRect), CGRectGetMinY(payDescRect),CGRectGetWidth(payDescRect), 0.0)
-            
-            self.payNumLabel.frame = CGRectMake(CGRectGetMinX(paynumRect),CGRectGetMaxY(self.payDescLabel.frame), CGRectGetWidth(paynumRect), CGRectGetHeight(paynumRect))
+            self.payDescLabel.snp.updateConstraints { make in
+                make.height.equalTo(0)
+            }
+            self.payNumLabel.snp.updateConstraints { make in
+                make.top.equalTo(self.payDescLabel.snp.bottom).offset(0)
+            }
             
             contentHeight = self.verificationModel == .password ? ((isNFT ? 320 : 294) + 20 - 31) : (536.0 - 31 + (isNFT ? 26 : 0))
         }
-        let contentViewRect = self.contentView.frame
-        self.contentView.frame = CGRectMake(CGRectGetMinX(contentViewRect), CGRectGetMinY(contentViewRect), CGRectGetWidth(contentViewRect),contentHeight)
+        self.contentView.snp.updateConstraints { make in
+            make.height.equalTo(contentHeight)
+        }
         self.setPayNumLabelAttribe(amount: payAmount, str: payUnit)
     
         if self.verificationModel == .faceID || self.verificationModel == .touchID {
@@ -216,7 +230,6 @@ public class ZapryPayVerificationView:UIView {
     }
     
     func setPayNumLabelAttribe(amount:String,str:String) {
-        
         let amountText = NSMutableAttributedString.init(string:"")
         let amountAttribe = NSMutableAttributedString(string: amount, attributes: [.foregroundColor : UIColor(hex: "#323232"),.font:UIFont.boldSystemFont(ofSize: 42)])
         amountText.append(amountAttribe)
@@ -277,7 +290,9 @@ public class ZapryPayVerificationView:UIView {
         self.tag = tagPrex
         window.addSubview(self)
         let mainRect = UIScreen.main.bounds
-        self.frame = mainRect
+        self.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
         
         let bgTap = UITapGestureRecognizer(target: self, action: #selector(bgTap))
         self.addGestureRecognizer(bgTap)
@@ -287,53 +302,96 @@ public class ZapryPayVerificationView:UIView {
         if self.verificationModel != .password {
             self.backgroundColor = UIColor(hexString: "#000000", alpha: 0.8)
         }
-        self.addSubview(self.contentView)
-
-        let contentTap = UITapGestureRecognizer(target: self, action: #selector(doNothingTap))
-        self.contentView.addGestureRecognizer(contentTap)
+        // 上左右圆角
+        self.addSubview(contentView)
+        self.contentView = contentView
+        contentView.snp.makeConstraints { make in
+            make.left.right.equalToSuperview()
+            make.bottom.equalTo(self.snp.bottom).offset( 0)
+            make.height.equalTo(contentHeight)
+        }
         
+        let contentTap = UITapGestureRecognizer(target: self, action: #selector(doNothingTap))
+        contentView.addGestureRecognizer(contentTap)
         
         self.contentView.addSubview(self.closeBtn)
-        self.closeBtn.frame = CGRectMake(15.0, 16.0, 24.0, 24.0)
+        self.closeBtn.snp.makeConstraints { make in
+            make.left.equalToSuperview().offset(15.0)
+            make.top.equalToSuperview().offset(16.0)
+            make.size.equalTo(CGSizeMake(24.0, 24.0))
+        }
         
         self.contentView.addSubview(self.titleLabel)
-        let titleWidth = CGRectGetWidth(mainRect) - 56.0
-        self.titleLabel.frame = CGRectMake((CGRectGetWidth(mainRect) - titleWidth)/2.0, 16.0,CGRectGetWidth(mainRect) - 56.0, 20.0)
+        self.titleLabel.snp.makeConstraints { make in
+            make.centerY.equalTo(self.closeBtn)
+            make.centerX.equalToSuperview()
+        }
         
         self.contentView.addSubview(self.payDescLabel)
-        self.payDescLabel.frame = CGRectMake(15.0, 68.0, CGRectGetWidth(mainRect) - 30.0, 30.0)
+        self.payDescLabel.snp.makeConstraints { make in
+            make.left.equalToSuperview().offset(15)
+            make.right.equalToSuperview().offset(-15)
+            make.height.equalTo(31)
+            make.top.equalToSuperview().offset(68)
+        }
+        
         self.contentView.addSubview(self.payNumLabel)
-        self.payNumLabel.frame = CGRectMake(CGRectGetMinX(self.payDescLabel.frame), CGRectGetMaxY(self.payDescLabel.frame) + 8.0 ,CGRectGetWidth(self.payDescLabel.frame), 30.0)
+        self.payNumLabel.snp.makeConstraints { make in
+            make.left.equalTo(self.payDescLabel)
+            make.right.equalTo(self.payDescLabel)
+            make.top.equalTo(self.payDescLabel.snp.bottom).offset(8)
+        }
         let isNFT = self.payModel.nftTokenId.count > 0
         if isNFT {
             self.contentView.addSubview(self.nftTokenIdLabel)
-            self.nftTokenIdLabel.frame = CGRectMake(CGRectGetMinX(self.payDescLabel.frame), CGRectGetMaxY(self.payNumLabel.frame) + 8.0,CGRectGetWidth(self.payDescLabel.frame), 30.0)
+            self.nftTokenIdLabel.snp.makeConstraints { make in
+                make.left.equalTo(self.payDescLabel)
+                make.right.equalTo(self.payDescLabel)
+                make.top.equalTo(self.payNumLabel.snp.bottom).offset(2)
+            }
         }
 
         self.contentView.addSubview(self.bottomLineView)
-        self.bottomLineView.frame = CGRectMake(15.0, CGRectGetMaxY((isNFT ? self.nftTokenIdLabel.frame : self.payNumLabel.frame)) + 18.0, CGRectGetWidth(mainRect) - 15.0*2.0, 0.5)
+        self.bottomLineView.snp.makeConstraints { make in
+            make.left.equalToSuperview().offset(23.5)
+            make.right.equalToSuperview().offset(-23.5)
+            make.top.equalTo(isNFT ? self.nftTokenIdLabel.snp.bottom : self.payNumLabel.snp.bottom).offset(18)
+            make.height.equalTo(0.5)
+        }
         
         self.contentView.addSubview(self.paymentModeLabel)
-        self.paymentModeLabel.frame = CGRectMake(CGRectGetMinX(self.bottomLineView.frame), CGRectGetMaxY(self.bottomLineView.frame) + 12.0, CGRectGetWidth(self.bottomLineView.frame) - 100.0, 30.0)
+        self.paymentModeLabel.snp.makeConstraints { make in
+            make.left.equalTo(self.bottomLineView)
+            make.right.equalTo(self.bottomLineView)
+            make.top.equalTo(self.bottomLineView.snp.bottom).offset(15)
+        }
         
         self.contentView.addSubview(self.walletLabel)
-        self.walletLabel.frame = CGRectMake(CGRectGetMaxX(self.bottomLineView.frame) - 100.0, CGRectGetMinY(self.paymentModeLabel.frame), 100.0, 30.0)
+        self.walletLabel.snp.makeConstraints { make in
+            make.right.equalTo(self.bottomLineView.snp.right)
+            make.centerY.equalTo(self.paymentModeLabel)
+        }
         
         if self.verificationModel == .password {
             self.addNoti()
             self.codeUnitView.addViewTo(contentView)
-            let itemHeight = (CGRectGetWidth(UIScreen.main.bounds) - 15.0*2.0 - 5*8.0)/6.0
-            self.codeUnitView.frame = CGRectMake(CGRectGetMinX(self.bottomLineView.frame),CGRectGetMaxY(self.walletLabel.frame) + 18.0, CGRectGetWidth(self.bottomLineView.frame),itemHeight)
+            self.codeUnitView.snp.makeConstraints { make in
+                make.left.equalTo(self.bottomLineView)
+                make.right.equalTo(self.bottomLineView)
+                make.height.equalTo(54)
+                make.top.equalTo(self.walletLabel.snp.bottom).offset(18)
+            }
         }else  {
-            let ivWidth = 56.0
             self.contentView.addSubview(self.touchIdIV)
             let isTouch = self.verificationModel == .touchID
+            self.touchIdIV.snp.makeConstraints { make in
+                make.centerX.equalToSuperview()
+                make.bottom.equalToSuperview().offset(isTouch ?  -90 : -156)
+                make.size.equalTo(CGSizeMake(56.0, 56.0))
+            }
             let imageName = isTouch ? "pay_touch_icon" :  "login_faceid"
             let image = ZapryUtil.shared.getBundleImage(imageName: imageName)
             self.touchIdIV.image = image
-            let logoWidth = 56.0
-            let height = (CGRectGetHeight(self.contentView.frame) - CGRectGetMaxY(self.paymentModeLabel.frame) - logoWidth)/2.0
-            self.touchIdIV.frame = CGRectMake((CGRectGetWidth(mainRect) - ivWidth) / 2.0,CGRectGetMaxY(self.paymentModeLabel.frame) + height, logoWidth, logoWidth)
         }
     }
     
@@ -389,7 +447,6 @@ public class ZapryPayVerificationView:UIView {
     lazy var bottomLineView:UIView = {
         let view = UIView()
         view.backgroundColor = UIColor(hex: "#E3E5E8")
-        
         return view
     }()
     

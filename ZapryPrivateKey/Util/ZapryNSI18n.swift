@@ -115,4 +115,8 @@ public class ZapryNSI18n:NSObject {
         ZapryUtil.shared.getZapryLocalizedStringForKey(key: "biometric_setting_save_wallet")
     }
     
+    public var flash_exchange_in_progress:String {
+        ZapryUtil.shared.getZapryLocalizedStringForKey(key: "flash_exchange_in_progress")
+    }
+    
 }
