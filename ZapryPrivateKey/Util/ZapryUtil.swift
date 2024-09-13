@@ -11,13 +11,19 @@ import HandyJSON
 public enum ZaprySDKLanguange:Int {
     case en = 0
     case zh_Hans = 1
+    case zh_Hant = 2
+    case vi = 3
+    case ko = 4
+    case ja = 5
+    case mn = 6
+    case th = 7
 }
 
 public class ZapryUtil {
     public static let shared = ZapryUtil()
     public static let bundle = Bundle(path: Bundle.init(for:ZapryUtil.self).path(forResource: "ZapryPrivateKey", ofType: "bundle") ?? "")
     var languageBundle:Bundle?
-    let supportedLanguages = ["zh-Hans","en"]
+    let supportedLanguages = ["zh-Hans","en","zh-Hant","vi","ko","ja","mn","th"]
     
     func getBundleImage(imageName:String) -> UIImage? {
         if imageName.isEmpty {
@@ -50,6 +56,18 @@ public class ZapryUtil {
         var languange:String = "en"
         if lan == .zh_Hans {
             languange = "zh-Hans"
+        } else if lan == .zh_Hant {
+            languange = "zh-Hant"
+        } else if lan == .vi {
+            languange = "vi"
+        } else if lan == .ko {
+            languange = "ko"
+        } else if lan == .ja {
+            languange = "ja"
+        } else if lan == .mn {
+            languange = "mn"
+        } else if lan == .th {
+            languange = "th"
         }
         return languange
     }
