@@ -230,6 +230,7 @@ public class ZapryPrivateKeyHelper: NSObject {
             return
         }
         ZapryWalletManager.deleteWallet()
+        //shytodo 原业务没有
         ZapryPrivateKeyHelper.shared.savePaymentVerificationMethod(type: .none)
     }
     
@@ -243,15 +244,6 @@ public class ZapryPrivateKeyHelper: NSObject {
     public func getMultiAddress() -> [String: String]? {
         return ZapryWalletManager.getMultiAddress()
     }
-    
-//    public func getPrivateKey(json: String, chainCode: String) -> String {
-//        var privateKey = ""
-//        let code = ZapryWalletManager.getChainCode(chainCode: chainCode)
-//        if let model = ZapryWalletManager.stringToModel(s:json, chainCode: code) {
-//            privateKey = model.accountPrivateKey
-//        }
-//        return privateKey
-//    }
     
     public func getWalletAddress(chainCode: String = "2000000") -> String {
         let address = ZapryWalletManager.getWalletAddress(chainCode: chainCode)
