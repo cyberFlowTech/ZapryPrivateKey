@@ -235,7 +235,7 @@ public class ZapryPrivateKeyHelper: NSObject {
         }
         ZapryWalletManager.deleteWallet()
         //shytodo 原业务没有
-        ZapryPrivateKeyHelper.shared.savePaymentVerificationMethod(type: .none)
+//        ZapryPrivateKeyHelper.shared.savePaymentVerificationMethod(type: .none)
     }
     
     public func deleteNewWallet() {
@@ -413,7 +413,6 @@ public class ZapryPrivateKeyHelper: NSObject {
     public func transferToSecurityStoreIfNeeded(targetType: ZapryDeviceBiometricType, walletModel:WalletModel?) -> Bool {
         let password = self.payPasswordForSet
         let result =  ZapryWalletManager.transferToSecurityStoreIfNeeded(targetType: targetType, walletModel: walletModel, password: password)
-        self.clearPayPasword()
         return result
     }
     
