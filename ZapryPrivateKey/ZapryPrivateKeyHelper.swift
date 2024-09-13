@@ -97,7 +97,7 @@ public class ZapryPrivateKeyHelper: NSObject {
         let type:Int =  params?["type"] as? Int ?? 0
         let password:String = params?["payPassword"] as? String ?? ""
         if !password.isEmpty {
-            self.payPasswordForSet = password
+            self.setPayPasword(password: password)
         }
         
         if type == 1 || type == 2 {
@@ -136,7 +136,10 @@ public class ZapryPrivateKeyHelper: NSObject {
             backupID = buID
         }
         let password = self.payPasswordForSet
-        self.setWalletInfo(mnemonic: mnemonic, wallet: wallet, password: password, backupID: backupID, completion: completion)
+        self.setWalletInfo(mnemonic: mnemonic, wallet: wallet, password: password, backupID: backupID) {[weak self] result, msg in
+            self?.clearPayPasword()
+            completion(result,msg)
+        }
     }
 
     
@@ -145,7 +148,6 @@ public class ZapryPrivateKeyHelper: NSObject {
             return
         }
         ZapryWalletManager.setMultiWalletInfo(mnemonic:mnemonic, wallet: wallet, password: password, backupID: backupID) { result, msg in
-            self.payPasswordForSet = ""
             completion(result,msg)
         }
     }
@@ -164,9 +166,11 @@ public class ZapryPrivateKeyHelper: NSObject {
         let verificationType = ZapryPrivateKeyHelper.shared.getPaymentVerificationMethod()
         let whiteList:[ZaprySceneType] = [.CloudBackup,.PayPasswordAuth,.CreateWallet]
         if verificationType == .password && (whiteList.contains(sceneType)) {
-            self.payPasswordForSet = payModel.payPassword
+            self.setPayPasword(password: payModel.payPassword)
         }
-        self.checkBeforePayOrSet(hasSet: false, sceneType:sceneType,payModel:payModel, completion: completion)
+        self.checkBeforePayOrSet(hasSet: false, sceneType:sceneType,payModel:payModel) { action, result, error in
+            completion(action,result,error)
+        }
     }
     
     public func checkBeforeSet(completion:@escaping (Int,String,String) -> Void) {
@@ -264,13 +268,27 @@ public class ZapryPrivateKeyHelper: NSObject {
         ZapryWalletManager.setCurrentBackupID(backupID: backupID)
     }
     
-    public func backupCurrentWallet(backupPassword: String,password:String) -> String? {
-        let result = ZapryWalletManager.backupCurrentWallet(backupPassword: backupPassword, password:password)
+    public func backupCurrentWallet(params:[String:Any]?) -> String? {
+        guard let params = params else {
+            return nil
+        }
+        guard let psw = params["password"] as? String else {
+            return nil
+        }
+        let password = self.payPasswordForSet
+        let result = ZapryWalletManager.backupCurrentWallet(backupPassword: psw, password:password)
+        self.clearPayPasword()
         return result
     }
     
-    public func getWalletInfo(chainCode: String,password:String) -> [String: Any]? {
+    public func getWalletInfo(params:[String:Any]?) -> [String: Any]? {
+        guard let params = params,
+                let chainCode = params["chainCode"] as? String else {
+            return nil
+        }
+        let password = self.payPasswordForSet
         let result = ZapryWalletManager.getWalletInfo(chainCode: chainCode, password:password)
+        self.clearPayPasword()
         return result
     }
     
@@ -381,7 +399,7 @@ public class ZapryPrivateKeyHelper: NSObject {
     private func transferToSecurityStore(type:Int,isSave:Bool,password:String) {
         let verificationType = ZapryDeviceBiometricType(rawValue: type) ?? .none
         if isSave {
-            let success = self.transferToSecurityStoreIfNeeded(targetType: verificationType,walletModel: nil,password: password)
+            let success = self.transferToSecurityStoreIfNeeded(targetType: verificationType,walletModel: nil)
             if success {
                 ZapryPrivateKeyHelper.shared.savePaymentVerificationMethod(type: verificationType)
             }else {
@@ -392,8 +410,18 @@ public class ZapryPrivateKeyHelper: NSObject {
         }
     }
     
-    public func transferToSecurityStoreIfNeeded(targetType: ZapryDeviceBiometricType, walletModel:WalletModel?,password:String) -> Bool {
+    public func transferToSecurityStoreIfNeeded(targetType: ZapryDeviceBiometricType, walletModel:WalletModel?) -> Bool {
+        let password = self.payPasswordForSet
         let result =  ZapryWalletManager.transferToSecurityStoreIfNeeded(targetType: targetType, walletModel: walletModel, password: password)
+        self.clearPayPasword()
         return result
+    }
+    
+    private func clearPayPasword() {
+        self.payPasswordForSet = ""
+    }
+    
+    private func setPayPasword(password:String) {
+        self.payPasswordForSet = password
     }
 }
