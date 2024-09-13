@@ -51,6 +51,7 @@ public class ZapryPrivateKeyHelper: NSObject {
     public static let ERROR_CODE_PASSWORD_FAILED:Int = -10002
     private var sceneListWithoutUI:[ZaprySceneType] = [.unBind,.checkMnemonicWord,.CreateWallet,.VerificationBiometic,.PayPasswordAuth,.AddNewChain,.CloudBackup,.Sign]
     public var CompletionHandle: ((_ type:Int) -> Void)?
+    private var payPasswordForSet:String = ""
     
     var zapryOptions:ZapryUserInfoModel?
     
@@ -88,10 +89,17 @@ public class ZapryPrivateKeyHelper: NSObject {
         return option.userId
     }
     
-    public func setPayAuth(type:Int,password:String,isSaveWallet:Bool,completion:@escaping (Bool,String)->Void) {
+    public func setPayAuth(params:[String:Any]?,isSaveWallet:Bool,completion:@escaping (Bool,String)->Void) {
         guard self.checkOptions() else {
+            completion(false,"")
             return
         }
+        let type:Int =  params?["type"] as? Int ?? 0
+        let password:String = params?["payPassword"] as? String ?? ""
+        if !password.isEmpty {
+            self.payPasswordForSet = password
+        }
+        
         if type == 1 || type == 2 {
             ZapryDeviceInfo.authByFaceIDOrTouchID {[weak self] error in
                 if let err = error {
@@ -111,23 +119,58 @@ public class ZapryPrivateKeyHelper: NSObject {
             } else {
                 completion(false,"setPayAuth failed:\(type)")
             }
+        }else {
+            completion(false,"")
         }
     }
     
-    public func setMultiWalletInfo(mnemonic:String,wallet:[String: Any],password:String,backupID:String?,completion:@escaping (Bool,String)->Void) {
+    public func setMultiWalletInfo(params:[String:Any]?,completion:@escaping (Bool,String)->Void) {
+        guard let params = params,
+              let wallet = params["wallet"] as? [String: Any],
+            let mnemonic = params["mnemonic"] as? String else {
+            completion(false,"")
+            return
+        }
+        var backupID:String?
+        if let extData = params["extData"] as? [String: Any], let buID = extData["backupId"] as? String {
+            backupID = buID
+        }
+        let password = self.payPasswordForSet
+        self.setWalletInfo(mnemonic: mnemonic, wallet: wallet, password: password, backupID: backupID, completion: completion)
+    }
+
+    
+    private func setWalletInfo(mnemonic:String,wallet:[String: Any],password:String,backupID:String?,completion:@escaping (Bool,String)->Void) {
         guard self.checkOptions() else {
             return
         }
-        ZapryWalletManager.setMultiWalletInfo(mnemonic:mnemonic, wallet: wallet, password: password, backupID: backupID, completion: completion)
+        ZapryWalletManager.setMultiWalletInfo(mnemonic:mnemonic, wallet: wallet, password: password, backupID: backupID) { result, msg in
+            self.payPasswordForSet = ""
+            completion(result,msg)
+        }
+    }
+    
+    public func checkPay(params:[String:Any],completion:@escaping (Int,String,String) -> Void) {
+        let payType = params["payType"] as? Int ?? 1
+        var payModel = ZapryPayModel()
+        //转账
+        if let data = params["data"] as? [String:Any] {
+            let tempModel = ZapryJSONUtil.dictionaryToModel(data, ZapryPayModel.self)
+            if let model = tempModel {
+                payModel = model
+            }
+        }
+        let sceneType = ZaprySceneType(rawValue:payType) ?? .none
+        let verificationType = ZapryPrivateKeyHelper.shared.getPaymentVerificationMethod()
+        let whiteList:[ZaprySceneType] = [.CloudBackup,.PayPasswordAuth,.CreateWallet]
+        if verificationType == .password && (whiteList.contains(sceneType)) {
+            self.payPasswordForSet = payModel.payPassword
+        }
+        self.checkBeforePayOrSet(hasSet: false, sceneType:sceneType,payModel:payModel, completion: completion)
     }
     
     public func checkBeforeSet(completion:@escaping (Int,String,String) -> Void) {
         self.checkBeforePayOrSet(hasSet: true,completion: completion)
-    }
-    
-    public func checkBeforePay(sceneType:Int,payModel:ZapryPayModel, completion:@escaping (Int,String,String) -> Void) {
-        let type = ZaprySceneType(rawValue: sceneType) ?? .none
-        self.checkBeforePayOrSet(hasSet: false, sceneType:type,payModel:payModel, completion: completion)
     }
     
     func checkBeforePayOrSet(hasSet:Bool,forceSetPassworld:Bool = false, sceneType:ZaprySceneType = .none,payModel:ZapryPayModel = ZapryPayModel(),completion:@escaping (Int,String,String) -> Void) {

@@ -235,21 +235,11 @@ extension RNManager {
             return
         }
         let payType = params["payType"] as? Int ?? 1
-        var payModel = ZapryPayModel()
-        //转账
-        if let data = params["data"] as? [String:Any] {
-            let tempModel = ZapryJSONUtil.dictionaryToModel(data, ZapryPayModel.self)
-            if let model = tempModel {
-                payModel = model
-            }
-        }
+        let chainCode = params["chainCode"] as? String ?? ""
         let sceneType = ZaprySceneType(rawValue:payType) ?? .none
         let verificationType = ZapryPrivateKeyHelper.shared.getPaymentVerificationMethod()
-        let whiteList:[ZaprySceneType] = [.CloudBackup,.PayPasswordAuth,.CreateWallet]
-        if verificationType == .password && (whiteList.contains(sceneType)) {
-            RNManager.shared.payPasswordForSet = payModel.payPassword
-        }
-        ZapryPrivateKeyHelper.shared.checkBeforePay(sceneType:sceneType.rawValue, payModel: payModel) {[weak self] action,result, error in
+        
+        ZapryPrivateKeyHelper.shared.checkPay(params: params) { [weak self] action,result, error in
             let checkAction = ZapryResultAction(rawValue: action)
             if checkAction == .success {
                 if sceneType == .checkMnemonicWord {
@@ -261,16 +251,15 @@ extension RNManager {
                     self?.completionHandle?(true,"",nil)
                     resolver?(true)
                 } else {
-                    let chainCode = payModel.chainCode
                     if !chainCode.isEmpty{
                         let model = ZapryWalletManager.stringToModel(s: result,chainCode: chainCode)
                         var dict = [String:Any]()
                         dict["mnemonic"] = model?.mnemonic ?? ""
                         if chainCode == "-1" {
-                            //shytodo 保存支付密码需求去掉
-                            if !payModel.payPassword.isEmpty {
-                                RNManager.shared.payPasswordForSet = payModel.payPassword
-                            }
+//                            //shytodo 保存支付密码需求去掉
+//                            if !payModel.payPassword.isEmpty {
+//                                RNManager.shared.payPasswordForSet = payModel.payPassword
+//                            }
                             let walletDict = ZapryJSONUtil.stringToDic(model?.multiWalletInfo)
                             dict["wallet"] = walletDict
                         }else {
@@ -302,24 +291,12 @@ extension RNManager {
     private func setMultiWalletInfo(params: [String: Any]?,
                                     resolver: RCTPromiseResolveBlock?,
                                     reject: RCTPromiseRejectBlock?) {
-        guard let params = params,
-              let wallet = params["wallet"] as? [String: Any],
-            let mnemonic = params["mnemonic"] as? String else {
-            reject?("-1","", nil)
-            return
-        }
-        var backupID:String?
-        if let extData = params["extData"] as? [String: Any], let buID = extData["backupId"] as? String {
-            backupID = buID
-        }
-        let password = RNManager.shared.payPasswordForSet ?? ""
-        ZapryPrivateKeyHelper.shared.setMultiWalletInfo(mnemonic: mnemonic, wallet: wallet, password: password, backupID: backupID) { result, msg in
+        ZapryPrivateKeyHelper.shared.setMultiWalletInfo(params: params) { result, msg in
             if result {
                 resolver?("0")
             }else {
                 reject?("-1",msg, nil)
             }
-            RNManager.shared.payPasswordForSet = ""
         }
     }
     
@@ -332,11 +309,7 @@ extension RNManager {
         if let _ = self.transferToSSCompletion {
             isSaveWallet = false
         }
-        var password:String = params?["payPassword"] as? String ?? ""
-        if !password.isEmpty {
-            RNManager.shared.payPasswordForSet = password
-        }
-        ZapryPrivateKeyHelper.shared.setPayAuth(type: type, password:password,isSaveWallet:isSaveWallet) { result, msg in
+        ZapryPrivateKeyHelper.shared.setPayAuth(params:params, isSaveWallet:isSaveWallet) { result, msg in
             if result{
                 if let completion = self.transferToSSCompletion {
                     completion(ZapryDeviceBiometricType(rawValue: type) ?? .none)

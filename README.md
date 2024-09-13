@@ -44,4 +44,4 @@ shy todo
     加链(payType:11)，
     保存icloud(payType:12)
     
-shy test分支：origin/feature/Wallet_sdk_0828
+shy 将sdk集成至app中：origin/feature/Wallet_sdk_0828

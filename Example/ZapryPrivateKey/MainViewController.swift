@@ -62,14 +62,8 @@ class MainViewController:UIViewController {
             ZapryUtil.makeToast("未创建钱包",isError: true, forView:ZapryUtil.keyWindow())
             return 
         }
-        let payModel = ZapryPayModel()
-        payModel.amount = "-0.03"
-        payModel.token = ["token":"ETH"]
-        let payScene:ZaprySceneType = .SendRedpacket
-        payModel.signType = payScene.rawValue
-//        let chainCode = "20000"
-//        payModel.chainCode = chainCode
-        ZapryPrivateKeyHelper.shared.checkBeforePay(sceneType: payScene.rawValue, payModel: payModel) { action, result, error in
+        let params:[String:Any] = ["amount":"-0.03","token":"ETH","signType":6]
+        ZapryPrivateKeyHelper.shared.checkPay(params: params) { action, result, error in
             print("action:\(action),result:\(result),error:\(error)")
             let isSuccess = action == 1
             ZapryUtil.makeToast(isSuccess ? "Successful" : "Failed", isError:!isSuccess, forView: ZapryUtil.keyWindow())
