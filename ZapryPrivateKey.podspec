@@ -35,5 +35,6 @@ TODO: Add long description of the pod here.
   s.dependency 'KeychainAccess', '~> 4.2.2'
   s.dependency 'HandyJSON', '~> 5.0.2'
   s.dependency 'CryptoSwift'
+  s.dependency 'SnapKit', '~> 5.6.0'
 
 end
