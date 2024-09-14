@@ -231,10 +231,10 @@ class ZapryPayVerificationView:UIView {
     
     func setPayNumLabelAttribe(amount:String,str:String) {
         let amountText = NSMutableAttributedString.init(string:"")
-        let amountAttribe = NSMutableAttributedString(string: amount, attributes: [.foregroundColor : UIColor(hex: "#323232"),.font:UIFont.boldSystemFont(ofSize: 42)])
+        let amountAttribe = NSMutableAttributedString(string: amount, attributes: [.foregroundColor : UIColor(hex: "#323232"),.font:ZapryUtil.kZapryDINBoldFont(size: 42)])
         amountText.append(amountAttribe)
         
-        let etmpText = NSMutableAttributedString(string: str, attributes: [.foregroundColor:UIColor(hex: "#323232"),.font:UIFont.systemFont(ofSize: 19.0)])
+        let etmpText = NSMutableAttributedString(string: str, attributes: [.foregroundColor:UIColor(hex: "#323232"),.font:ZapryUtil.kZapryMediumFont(size: 19)])
         
         amountText.append(etmpText)
         self.payNumLabel.attributedText = amountText
@@ -340,7 +340,9 @@ class ZapryPayVerificationView:UIView {
             make.left.equalTo(self.payDescLabel)
             make.right.equalTo(self.payDescLabel)
             make.top.equalTo(self.payDescLabel.snp.bottom).offset(8)
+            make.height.equalTo(48.0)
         }
+        
         let isNFT = self.payModel.nftTokenId.count > 0
         if isNFT {
             self.contentView.addSubview(self.nftTokenIdLabel)
@@ -411,7 +413,7 @@ class ZapryPayVerificationView:UIView {
     
     lazy var titleLabel:UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 17)
+        label.font = ZapryUtil.kZapryMediumFont(size: 17)
         label.textColor = UIColor(hex: "#323232")
         label.textAlignment = .center
         return label
@@ -419,24 +421,26 @@ class ZapryPayVerificationView:UIView {
     
     lazy var payDescLabel:UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16)
+        label.font = ZapryUtil.kZapryRegularFont(size: 16)
         label.textColor = UIColor(hex: "#323232")
         label.textAlignment = .center
         label.lineBreakMode = .byTruncatingTail
+        label.backgroundColor = .blue
         return label
     }()
     
     lazy var payNumLabel:UILabel = {
         let label = UILabel()
-        label.font = UIFont.boldSystemFont(ofSize: 19)
+        label.font = ZapryUtil.kZapryMediumFont(size: 19)
         label.textColor = UIColor(hex: "#323232")
         label.textAlignment = .center
+        label.backgroundColor = .red
         return label
     }()
     
     lazy var nftTokenIdLabel:UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 19)
+        label.font = ZapryUtil.kZapryMediumFont(size: 19)
         label.textColor = UIColor(hex: "#323232")
         label.textAlignment = .center
         label.numberOfLines = 1
@@ -452,7 +456,7 @@ class ZapryPayVerificationView:UIView {
     
     lazy var paymentModeLabel:UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = ZapryUtil.kZapryRegularFont(size: 14)
         label.textColor = UIColor(hex: "#6C737F")
         label.text = ZapryNSI18n.shared.biometric_pay_method
         return label
@@ -460,7 +464,7 @@ class ZapryPayVerificationView:UIView {
     
     lazy var walletLabel:UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = ZapryUtil.kZapryRegularFont(size: 14)
         label.textColor = UIColor(hex: "#6C737F")
         label.text = ZapryNSI18n.shared.mine_wallet
         label.textAlignment = .right

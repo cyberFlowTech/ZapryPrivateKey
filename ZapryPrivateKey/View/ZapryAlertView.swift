@@ -79,61 +79,71 @@ public class ZapryAlertView: UIView {
 
     func setupSubviews() {
         let kKeyWindow = ZapryUtil.keyWindow()
+        let kScreenWidth = UIScreen.main.bounds.size.width
         kKeyWindow.addSubview(self)
-        self.frame = kKeyWindow.frame
+        self.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
         
         let bgTap = UITapGestureRecognizer(target: self, action: #selector(bgTap))
         self.addGestureRecognizer(bgTap)
-
+    
         self.addSubview(self.contentView)
-
-        self.contentView.addSubview(self.titleLabel)
-        self.titleLabel.text = self.titleText ?? ""
-        let titleWidth = CGRectGetWidth(self.frame) - (43.5 + 32.0)*2.0
-        var titleHeight = 0.0
-        var titlePosY = 0.0
-        if let title = self.titleText,!title.isEmpty {
-            titlePosY = 24.0
-            titleHeight = ZapryUtil.sizeOfText(text: self.titleText ?? "", font: UIFont.boldSystemFont(ofSize: 16), maximumWidth: titleWidth).height
+    
+        contentView.addSubview(self.titleLabel)
+        self.titleLabel.text = self.titleText
+        titleLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(25.0)
+            make.left.equalToSuperview().offset(43.5)
+            make.right.equalToSuperview().offset(-43.5)
         }
-        self.titleLabel.frame = CGRectMake(43.5, titlePosY,titleWidth, titleHeight)
         
         self.contentView.addSubview(self.contentLabel)
         self.contentLabel.text = self.contentText
-        let contentWidth = titleWidth
-        var contentHeight = 0.0
-        var contentPosY = CGRectGetMaxY(self.titleLabel.frame)
-        if let conent = self.contentText,!conent.isEmpty {
-            contentHeight = ZapryUtil.sizeOfText(text:conent, font: UIFont.systemFont(ofSize: 14), maximumWidth: contentWidth).height
-            contentPosY = contentPosY + 22.0
+        self.contentLabel.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(25)
+            make.centerX.equalToSuperview()
+            make.width.lessThanOrEqualTo(kScreenWidth - 25.0*2.0 - 32.0*2.0)
         }
-        self.contentLabel.frame = CGRectMake(CGRectGetMinX(self.titleLabel.frame),contentPosY,contentWidth, contentHeight)
         
-        self.subContentLabel.text = self.subContentText
-        self.contentView.addSubview(self.subContentLabel)
-        let subContentWidth = titleWidth
-        var subContentHeight = 0.0
-        var subContentPosY = CGRectGetMaxY(self.contentLabel.frame)
-        if let subContent = self.subContentText,!subContent.isEmpty {
-            subContentHeight = ZapryUtil.sizeOfText(text:subContent, font: UIFont.systemFont(ofSize: 13), maximumWidth: subContentWidth).height
-            subContentPosY = subContentPosY + 10.0
+        let hasSubContent = !(self.subContentText?.isEmpty ?? true)
+        if hasSubContent {
+            contentView.addSubview(self.subContentLabel)
+            self.subContentLabel.text = self.subContentText
+            self.subContentLabel.snp.makeConstraints { make in
+                make.top.equalTo(self.contentLabel.snp.bottom).offset(10)
+                make.centerX.equalToSuperview()
+                make.width.lessThanOrEqualTo(kScreenWidth - 25.0*2.0 - 32.0*2.0)
+            }
         }
-        self.subContentLabel.frame = CGRectMake(CGRectGetMinX(self.titleLabel.frame), subContentPosY, subContentWidth, subContentHeight)
-        
-        let width = CGRectGetWidth(self.frame) - 32.0*2.0
-        
-        let btnPosY = CGRectGetMaxY(self.subContentLabel.frame) + 27.0
-        let btnWidth = (width - 10.0 - 24.5*2.0)/2.0
-        let btnHeight = 44.0
-        self.contentView.addSubview(self.cancelButton)
-        self.cancelButton.frame = CGRectMake(24.5, btnPosY, btnWidth, btnHeight)
         
         self.contentView.addSubview(self.confirmButton)
-        self.confirmButton.frame = CGRectMake(CGRectGetMaxX(self.cancelButton.frame) + 10.0, btnPosY, btnWidth, btnHeight)
+        self.confirmButton.setTitle(self.confirmText, for: .normal)
+        self.confirmButton.snp.makeConstraints { make in
+            make.right.equalToSuperview().offset(-25.0)
+            if hasSubContent {
+                make.top.equalTo(subContentLabel.snp.bottom).offset(35.0)
+            }else {
+                make.top.equalTo(self.contentLabel.snp.bottom).offset(35.0)
+            }
+            make.height.equalTo(44)
+            make.bottom.equalToSuperview().offset(-30)
+        }
         
-        let height = CGRectGetMaxY(self.cancelButton.frame) + 30.0
-        let posY = (CGRectGetHeight(self.frame) - height) / 2.0
-        self.contentView.frame = CGRectMake(32.0, posY, width, height)
+        self.contentView.addSubview(self.cancelButton)
+        self.cancelButton.setTitle(self.cancelText, for: .normal)
+        self.cancelButton.snp.makeConstraints { make in
+            make.top.equalTo(self.confirmButton)
+            make.left.equalToSuperview().offset(25.0)
+            make.size.equalTo(self.confirmButton)
+            make.right.equalTo(self.confirmButton.snp.left).offset(-12)
+        }
+        
+        self.contentView.snp.makeConstraints { make in
+            make.left.equalToSuperview().offset(32)
+            make.right.equalToSuperview().offset(-32)
+            make.centerY.equalToSuperview()
+        }
     }
     
     lazy var contentView:UIView = {
@@ -148,7 +158,7 @@ public class ZapryAlertView: UIView {
         let label = UILabel()
         label.textColor = UIColor(hex:"#060606")
         label.textAlignment = .center
-        label.font = UIFont.boldSystemFont(ofSize: 16)
+        label.font = ZapryUtil.kZaprySemiboldFont(size: 17)
         return label
     }()
     
@@ -156,7 +166,7 @@ public class ZapryAlertView: UIView {
         let label = UILabel()
         label.textColor = UIColor(hex: "#2F3237")
         label.textAlignment = .left
-        label.font = UIFont.systemFont(ofSize: 14)
+        label.font = ZapryUtil.kZapryRegularFont(size: 15)
         label.numberOfLines = 0
         label.lineBreakMode = .byWordWrapping
         return label
@@ -166,7 +176,7 @@ public class ZapryAlertView: UIView {
         let label = UILabel()
         label.textColor = UIColor(hex: "#999999")
         label.textAlignment = .left
-        label.font = UIFont.systemFont(ofSize: 13)
+        label.font = ZapryUtil.kZapryRegularFont(size: 13)
         label.numberOfLines = 0
         label.lineBreakMode = .byWordWrapping
         return label
@@ -178,7 +188,7 @@ public class ZapryAlertView: UIView {
         btn.backgroundColor = UIColor(hex: "#4182FF")
         btn.setTitle(self.confirmText, for: .normal)
         btn.setTitleColor(UIColor(hex: "#FFFFFF"), for: .normal)
-        btn.titleLabel?.font = UIFont.systemFont(ofSize: 17)
+        btn.titleLabel?.font = ZapryUtil.kZapryRegularFont(size: 16)
         btn.addTarget(self, action: #selector(confirmAction), for: .touchUpInside)
         return btn
     }()
@@ -189,7 +199,7 @@ public class ZapryAlertView: UIView {
         btn.backgroundColor = UIColor(hex: "#F2F3F5")
         btn.setTitle(self.cancelText, for: .normal)
         btn.setTitleColor(UIColor(hex: "#767E8B"), for: .normal)
-        btn.titleLabel?.font = UIFont.systemFont(ofSize: 17)
+        btn.titleLabel?.font =  ZapryUtil.kZapryRegularFont(size: 16)
         btn.addTarget(self, action: #selector(cancelAction), for: .touchUpInside)
         return btn
     }()

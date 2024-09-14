@@ -154,4 +154,32 @@ public class ZapryUtil {
             view?.zapryHideToast()
         }
     }
+    
+    //字体
+    class func kZapryRegularFont(size: CGFloat) -> UIFont {
+        return UIFont(name: "PingFangSC-Regular", size: size)!
+    }
+
+    class func kZapryMediumFont(size: CGFloat) -> UIFont {
+        return UIFont(name: "PingFangSC-Medium", size: size)!
+    }
+
+    class func kZaprySemiboldFont(size: CGFloat) -> UIFont {
+        return UIFont(name: "PingFangSC-Semibold", size: size)!
+    }
+    
+    class func kZapryDINBoldFont(size:CGFloat) -> UIFont {
+        if let font = UIFont(name: "DIN-Bold", size: size) {
+            return font
+        }
+        return kZapryMediumFont(size: size)
+    }
+
+    class func kZapryDINMediumFont(size:CGFloat) -> UIFont {
+        if let font = UIFont(name: "DIN-Medium", size: size) {
+            return font
+        }
+        return kZaprySemiboldFont(size: size)
+    }
+    
 }
