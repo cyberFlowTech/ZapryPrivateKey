@@ -18,7 +18,7 @@ public enum ZapryResultAction:Int {
 }
 
 @objcMembers
-public class ZapryPayModel:NSObject,HandyJSON {
+class ZapryPayModel:NSObject,HandyJSON {
     public var amount:String = "0.00"
     public var chainCode:String = ""
     public var nick:String = ""
@@ -51,7 +51,6 @@ public class ZapryPrivateKeyHelper: NSObject {
     public static let ERROR_CODE_PASSWORD_FAILED:Int = -10002
     private var sceneListWithoutUI:[ZaprySceneType] = [.unBind,.checkMnemonicWord,.CreateWallet,.VerificationBiometic,.PayPasswordAuth,.AddNewChain,.CloudBackup,.Sign]
     public var CompletionHandle: ((_ type:Int) -> Void)?
-    private var payPasswordForSet:String = ""
     
     var zapryOptions:ZapryUserInfoModel?
     
@@ -97,7 +96,7 @@ public class ZapryPrivateKeyHelper: NSObject {
         let type:Int =  params?["type"] as? Int ?? 0
         let password:String = params?["payPassword"] as? String ?? ""
         if !password.isEmpty {
-            self.setPayPasword(password: password)
+            ZapryWalletManager.shared.setPayPasword(password: password)
         }
         
         if type == 1 || type == 2 {
@@ -137,9 +136,9 @@ public class ZapryPrivateKeyHelper: NSObject {
         if let extData = params["extData"] as? [String: Any], let buID = extData["backupId"] as? String {
             backupID = buID
         }
-        let password = self.getPayPassword()
+        let password = ZapryWalletManager.shared.getPayPassword()
         self.setWalletInfo(mnemonic: mnemonic, wallet: wallet, password: password, backupID: backupID) {[weak self] result, msg in
-            self?.clearPayPasword()
+            ZapryWalletManager.shared.clearPayPasword()
             completion(result,msg)
         }
     }
@@ -168,7 +167,7 @@ public class ZapryPrivateKeyHelper: NSObject {
         let verificationType = ZapryPrivateKeyHelper.shared.getPaymentVerificationMethod()
         let whiteList:[ZaprySceneType] = [.CloudBackup,.PayPasswordAuth,.CreateWallet]
         if verificationType == .password && (whiteList.contains(sceneType)) {
-            self.setPayPasword(password: payModel.payPassword)
+            ZapryWalletManager.shared.setPayPasword(password: payModel.payPassword)
         }
         self.checkBeforePayOrSet(hasSet: false, sceneType:sceneType,payModel:payModel) { action, result, error in
             completion(action,result,error)
@@ -290,9 +289,9 @@ public class ZapryPrivateKeyHelper: NSObject {
         guard let psw = params["password"] as? String else {
             return nil
         }
-        let password = self.getPayPassword()
+        let password = ZapryWalletManager.shared.getPayPassword()
         let result = ZapryWalletManager.backupCurrentWallet(backupPassword: psw, password:password)
-        self.clearPayPasword()
+        ZapryWalletManager.shared.clearPayPasword()
         return result
     }
     
@@ -301,9 +300,9 @@ public class ZapryPrivateKeyHelper: NSObject {
                 let chainCode = params["chainCode"] as? String else {
             return nil
         }
-        let password = self.getPayPassword()
+        let password = ZapryWalletManager.shared.getPayPassword()
         let result = ZapryWalletManager.getWalletInfo(chainCode: chainCode, password:password)
-        self.clearPayPasword()
+        ZapryWalletManager.shared.clearPayPasword()
         return result
     }
     
@@ -438,20 +437,43 @@ public class ZapryPrivateKeyHelper: NSObject {
     }
     
     public func transferToSecurityStoreIfNeeded(targetType: ZapryDeviceBiometricType, walletModel:WalletModel?) -> Bool {
-        let password = self.getPayPassword()
+        let password = ZapryWalletManager.shared.getPayPassword()
         let result =  ZapryWalletManager.transferToSecurityStoreIfNeeded(targetType: targetType, walletModel: walletModel, password: password)
         return result
     }
     
-    private func getPayPassword() -> String {
-        return self.payPasswordForSet
+    public static func stringToModel(s: String, chainCode: String = "2000000") -> WalletModel? {
+        let decoder = JSONDecoder()
+        guard let data = s.data(using: .utf8) else { return nil }
+        guard var model = try? decoder.decode(WalletModel.self, from: data) else { return nil }
+        guard let info = ZapryJSONUtil.stringToDic(model.multiWalletInfo) else { return nil }
+        for (key, value) in info {
+            if chainCode == key {
+                if let wallet = value as? [String: String] {
+                    model.accountAddress = wallet["address"] ?? ""
+                    model.accountPrivateKey = wallet["privateKey"] ?? ""
+                }
+            }
+        }
+        return model
     }
     
-    public func clearPayPasword() {
-        self.payPasswordForSet = ""
+    public static func getOldWalletAddress() -> String {
+        if let s = UserDefaults.standard.value(forKey: ZapryWalletManager.kMultiUdKey) as? String {
+            if let model = ZapryPrivateKeyHelper.stringToModel(s: s) {
+                guard let dic = ZapryWalletManager.getMultiAddressFromModel(model: model) else { return "" }
+                guard let address = dic["2000000"] else { return "" }
+                return address
+            }
+        }
+        return ""
     }
     
-    private func setPayPasword(password:String) {
-        self.payPasswordForSet = password
+    public static func getChainCode(chainCode:String) -> String {
+        let etmpChainCodeSeries:[String] = ["1000000","2000000","2010000","1010000","1020000","1030000","1040000","5000001","5000002","5000004","5000005"]
+        if etmpChainCodeSeries.contains(chainCode) {
+            return "2000000"
+        }
+        return chainCode
     }
 }

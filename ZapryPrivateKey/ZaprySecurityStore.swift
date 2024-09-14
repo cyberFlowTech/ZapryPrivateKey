@@ -10,7 +10,7 @@ import Security
 import LocalAuthentication
 import CryptoSwift
 
-@objcMembers public class ZaprySecurityStore : NSObject {
+@objcMembers class ZaprySecurityStore : NSObject {
     
     ///
     /// 安全的生物识别验证的钱包

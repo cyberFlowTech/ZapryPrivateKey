@@ -16,23 +16,23 @@ public struct WalletModel: Codable {
     public var multiWalletInfo: String = ""
 }
 
-@objcMembers public class ZapryWalletManager: NSObject {
-    
+@objcMembers class ZapryWalletManager: NSObject {
+    private var payPasswordForSet:String = ""
     //shy:由于2.8之前的privateKey是存储在UserDefault上的，所以需要兼容老版本，只获取不存
-    public static var kMultiUdKey: String {
+    static var kMultiUdKey: String {
         "\(ZapryPrivateKeyHelper.shared.getUserIdFromOptions())-multi-walletInfo"
     }
     //shy：2.8之后的非敏感数据address存储在userDefault上的
-    public static var kAddressKey: String {
+    static var kAddressKey: String {
         "\(ZapryPrivateKeyHelper.shared.getUserIdFromOptions())-multi-walletInfo-address"
     }
-    public static var kCurrentBackupID: String {
+    static var kCurrentBackupID: String {
         "\(ZapryPrivateKeyHelper.shared.getUserIdFromOptions())-multi-walletInfo-currnet-backupID"
     }
-    public static func getCurrentBackupID() -> String? {
+    static func getCurrentBackupID() -> String? {
         return UserDefaults.standard.value(forKey: ZapryWalletManager.kCurrentBackupID) as? String
     }
-    public static func setCurrentBackupID(backupID: String) {
+    static func setCurrentBackupID(backupID: String) {
         ZapryUtil.saveObject(object: backupID, key: ZapryWalletManager.kCurrentBackupID)
     }
     
@@ -48,7 +48,7 @@ public struct WalletModel: Codable {
         ZapryUtil.saveObject(object: payPasswordMD5, key: Self.kCurrentPayPasswordMD5)
     }
     
-    public static let shared = ZapryWalletManager()
+    static let shared = ZapryWalletManager()
     
     static func setMultiWalletInfo(mnemonic:String,wallet:[String: Any],password:String,backupID:String?,completion:@escaping (Bool,String)->Void) {
         guard !mnemonic.isEmpty,!wallet.isEmpty else {
@@ -71,15 +71,15 @@ public struct WalletModel: Codable {
         switch type {
         case .faceID, .touchID:
             if let s = ZaprySecurityStore.getWalletThatAuthByBiometric() {
-                model = ZapryWalletManager.stringToModel(s: s)
+                model = ZapryPrivateKeyHelper.stringToModel(s: s)
             }
         case .password:
             if let s = ZaprySecurityStore.getWalletThatAuthByPayPassword(payPassword:password) {
-                model = ZapryWalletManager.stringToModel(s: s)
+                model = ZapryPrivateKeyHelper.stringToModel(s: s)
             }
         case .none,.denyBiometry,.lock:
             if let s = UserDefaults.standard.value(forKey: ZapryWalletManager.kMultiUdKey) as? String {
-                model = ZapryWalletManager.stringToModel(s: s)
+                model = ZapryPrivateKeyHelper.stringToModel(s: s)
             }
         }
         return model
@@ -109,7 +109,7 @@ public struct WalletModel: Codable {
         }
         if ( model == nil ) {
             if let s = UserDefaults.standard.value(forKey: ZapryWalletManager.kMultiUdKey) as? String {
-                model = ZapryWalletManager.stringToModel(s: s)
+                model = ZapryPrivateKeyHelper.stringToModel(s: s)
             }
         }
         // 这2个是临时变量，对应某个链，所以不需要保存
@@ -132,11 +132,11 @@ public struct WalletModel: Codable {
         var success = false
         let encoder = JSONEncoder()
         guard let data = try? encoder.encode(model) else { 
-            ZapryPrivateKeyHelper.shared.clearPayPasword()
+            ZapryWalletManager.shared.clearPayPasword()
             return false 
         }
         guard let modelStr = String(data: data, encoding: .utf8) else { 
-            ZapryPrivateKeyHelper.shared.clearPayPasword()
+            ZapryWalletManager.shared.clearPayPasword()
             return false 
         }
         switch targetType {
@@ -162,7 +162,7 @@ public struct WalletModel: Codable {
                 }
             }
         }
-        ZapryPrivateKeyHelper.shared.clearPayPasword()
+        ZapryWalletManager.shared.clearPayPasword()
         return success
     }
     
@@ -219,7 +219,7 @@ public struct WalletModel: Codable {
             }
         case .none,.denyBiometry,.lock:
             if let s = UserDefaults.standard.value(forKey: ZapryWalletManager.kMultiUdKey) as? String {
-                if let model = ZapryWalletManager.stringToModel(s: s) {
+                if let model = ZapryPrivateKeyHelper.stringToModel(s: s) {
                     return ZapryWalletManager.getMultiAddressFromModel(model: model)
                 }
             }
@@ -227,7 +227,7 @@ public struct WalletModel: Codable {
         return nil
     }
     
-    public static func getMultiAddressFromModel(model: WalletModel) -> [String: String]? {
+    static func getMultiAddressFromModel(model: WalletModel) -> [String: String]? {
         var result: [String: String] = [:]
         let multi = model.multiWalletInfo
         guard let info = ZapryJSONUtil.stringToDic(multi) else { return nil }
@@ -239,30 +239,14 @@ public struct WalletModel: Codable {
         return result
     }
     
-    public static func stringToModel(s: String, chainCode: String = "2000000") -> WalletModel? {
-        let decoder = JSONDecoder()
-        guard let data = s.data(using: .utf8) else { return nil }
-        guard var model = try? decoder.decode(WalletModel.self, from: data) else { return nil }
-        guard let info = ZapryJSONUtil.stringToDic(model.multiWalletInfo) else { return nil }
-        for (key, value) in info {
-            if chainCode == key {
-                if let wallet = value as? [String: String] {
-                    model.accountAddress = wallet["address"] ?? ""
-                    model.accountPrivateKey = wallet["privateKey"] ?? ""
-                }
-            }
-        }
-        return model
-    }
-    
-    public static func modelToStr(model:WalletModel) -> String? {
+    static func modelToStr(model:WalletModel) -> String? {
         let encoder = JSONEncoder()
         guard let data = try? encoder.encode(model) else { return nil }
         guard let modelStr = String(data: data, encoding: .utf8) else { return nil }
         return modelStr
     }
     
-    public static func remove(key: String) {
+    static func remove(key: String) {
         UserDefaults.standard.removeObject(forKey: key)
         UserDefaults.standard.synchronize()
     }
@@ -291,22 +275,15 @@ public struct WalletModel: Codable {
         return address
     }
     
-    public static func getOldWalletAddress() -> String {
-        if let s = UserDefaults.standard.value(forKey: ZapryWalletManager.kMultiUdKey) as? String {
-            if let model = ZapryWalletManager.stringToModel(s: s) {
-                guard let dic = ZapryWalletManager.getMultiAddressFromModel(model: model) else { return "" }
-                guard let address = dic["2000000"] else { return "" }
-                return address
-            }
-        }
-        return ""
+    func getPayPassword() -> String {
+        return self.payPasswordForSet
     }
     
-    public static func getChainCode(chainCode:String) -> String {
-        let etmpChainCodeSeries:[String] = ["1000000","2000000","2010000","1010000","1020000","1030000","1040000","5000001","5000002","5000004","5000005"]
-        if etmpChainCodeSeries.contains(chainCode) {
-            return "2000000"
-        }
-        return chainCode
+    func clearPayPasword() {
+        self.payPasswordForSet = ""
+    }
+    
+    func setPayPasword(password:String) {
+        self.payPasswordForSet = password
     }
 }
