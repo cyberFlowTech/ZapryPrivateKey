@@ -80,7 +80,7 @@ public struct WalletModel: Codable {
         case .none,.denyBiometry,.lock:
             if let s = UserDefaults.standard.value(forKey: ZapryWalletManager.kMultiUdKey) as? String {
                 NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"use old wallet verificationType"])
-                model = ZapryWalletManager.stringToModel(s: s)
+                model = ZapryPrivateKeyHelper.stringToModel(s: s)
             }
         }
         return model
@@ -111,7 +111,7 @@ public struct WalletModel: Codable {
         if ( model == nil ) {
             if let s = UserDefaults.standard.value(forKey: ZapryWalletManager.kMultiUdKey) as? String {
                 NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"get walletInfo by old wallet"])
-                model = ZapryWalletManager.stringToModel(s: s)
+                model = ZapryPrivateKeyHelper.stringToModel(s: s)
             }
         }
         // 这2个是临时变量，对应某个链，所以不需要保存
