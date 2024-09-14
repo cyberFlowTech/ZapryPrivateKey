@@ -119,8 +119,14 @@ public struct WalletModel: Codable {
         ZapryUtil.saveObject(object: "", key: ZapryWalletManager.kAddressKey)
         var success = false
         let encoder = JSONEncoder()
-        guard let data = try? encoder.encode(model) else { return false }
-        guard let modelStr = String(data: data, encoding: .utf8) else { return false }
+        guard let data = try? encoder.encode(model) else { 
+            ZapryPrivateKeyHelper.shared.clearPayPasword()
+            return false 
+        }
+        guard let modelStr = String(data: data, encoding: .utf8) else { 
+            ZapryPrivateKeyHelper.shared.clearPayPasword()
+            return false 
+        }
         switch targetType {
         case .faceID, .touchID:
             success = ZaprySecurityStore.setWalletThatAuthByBiometric(walletInfo: modelStr)
@@ -128,7 +134,6 @@ public struct WalletModel: Codable {
                 _ = ZaprySecurityStore.deleteWalletThatAuthByPayPassword()
             }
         case .password:
-            //shytodo 保存支付密码需求去掉
             success = ZaprySecurityStore.setWalletThatAuthByPayPassword(walletInfo: modelStr, payPassword:password)
             if ( success ) {
                 _ = ZaprySecurityStore.deleteWalletThatAuthByBiometric()
@@ -145,6 +150,7 @@ public struct WalletModel: Codable {
                 }
             }
         }
+        ZapryPrivateKeyHelper.shared.clearPayPasword()
         return success
     }
     

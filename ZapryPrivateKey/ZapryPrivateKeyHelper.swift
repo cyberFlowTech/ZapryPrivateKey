@@ -135,7 +135,7 @@ public class ZapryPrivateKeyHelper: NSObject {
         if let extData = params["extData"] as? [String: Any], let buID = extData["backupId"] as? String {
             backupID = buID
         }
-        let password = self.payPasswordForSet
+        let password = self.getPayPassword()
         self.setWalletInfo(mnemonic: mnemonic, wallet: wallet, password: password, backupID: backupID) {[weak self] result, msg in
             self?.clearPayPasword()
             completion(result,msg)
@@ -213,7 +213,18 @@ public class ZapryPrivateKeyHelper: NSObject {
                         return
                     }
                 } else {
-                    self.authByFaceIDOrTouchID(sceneType:sceneType, payModel: payModel, completion: completion)
+                    //由于解绑之后不会删除支付验证方式的存储，创建钱包的时候需要特殊处理
+                    if sceneType == .CreateWallet {
+                        ZapryDeviceInfo.authByFaceIDOrTouchID { e in
+                            if let e {
+                                completion(ZapryResultAction.fail.rawValue,"","")
+                            } else {
+                                completion(ZapryResultAction.success.rawValue,"","")
+                            }
+                        }
+                    }else {
+                        self.authByFaceIDOrTouchID(sceneType:sceneType, payModel: payModel, completion: completion)
+                    }
                     return
                 }
             }
@@ -275,7 +286,7 @@ public class ZapryPrivateKeyHelper: NSObject {
         guard let psw = params["password"] as? String else {
             return nil
         }
-        let password = self.payPasswordForSet
+        let password = self.getPayPassword()
         let result = ZapryWalletManager.backupCurrentWallet(backupPassword: psw, password:password)
         self.clearPayPasword()
         return result
@@ -286,7 +297,7 @@ public class ZapryPrivateKeyHelper: NSObject {
                 let chainCode = params["chainCode"] as? String else {
             return nil
         }
-        let password = self.payPasswordForSet
+        let password = self.getPayPassword()
         let result = ZapryWalletManager.getWalletInfo(chainCode: chainCode, password:password)
         self.clearPayPasword()
         return result
@@ -411,12 +422,16 @@ public class ZapryPrivateKeyHelper: NSObject {
     }
     
     public func transferToSecurityStoreIfNeeded(targetType: ZapryDeviceBiometricType, walletModel:WalletModel?) -> Bool {
-        let password = self.payPasswordForSet
+        let password = self.getPayPassword()
         let result =  ZapryWalletManager.transferToSecurityStoreIfNeeded(targetType: targetType, walletModel: walletModel, password: password)
         return result
     }
     
-    private func clearPayPasword() {
+    private func getPayPassword() -> String {
+        return self.payPasswordForSet
+    }
+    
+    public func clearPayPasword() {
         self.payPasswordForSet = ""
     }
     
