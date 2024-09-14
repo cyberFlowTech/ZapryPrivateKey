@@ -396,9 +396,6 @@ public class ZapryPrivateKeyHelper: NSObject {
             if let md5 = ZapryWalletManager.getCurrentPayPasswordMD5() {
                 if ( payModel.payPassword.md5 == md5 ) { // 验证通过
                     completion(ZapryResultAction.success.rawValue,"","")
-                    if ( sceneType == .CreateWallet || sceneType == .CloudBackup ) {
-                        self.setPayPasword(password: payModel.payPassword)
-                    }
                 } else {
                     completion(ZapryResultAction.fail.rawValue,"","")
                 }
