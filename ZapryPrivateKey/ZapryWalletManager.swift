@@ -36,6 +36,18 @@ public struct WalletModel: Codable {
         ZapryUtil.saveObject(object: backupID, key: ZapryWalletManager.kCurrentBackupID)
     }
     
+    static var kCurrentPayPasswordMD5: String {
+        "\(ZapryPrivateKeyHelper.shared.getUserIdFromOptions())-multi-walletInfo-currnet-PayPasswordMD5"
+    }
+    
+    static func getCurrentPayPasswordMD5() -> String? {
+        return UserDefaults.standard.value(forKey: Self.kCurrentPayPasswordMD5) as? String
+    }
+    
+    static func setCurrentPayPasswordMD5(payPasswordMD5: String) {
+        ZapryUtil.saveObject(object: payPasswordMD5, key: Self.kCurrentPayPasswordMD5)
+    }
+    
     public static let shared = ZapryWalletManager()
     
     static func setMultiWalletInfo(mnemonic:String,wallet:[String: Any],password:String,backupID:String?,completion:@escaping (Bool,String)->Void) {

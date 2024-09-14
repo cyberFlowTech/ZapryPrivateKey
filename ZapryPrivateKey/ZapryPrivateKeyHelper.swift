@@ -114,6 +114,8 @@ public class ZapryPrivateKeyHelper: NSObject {
             }
         }else if type == 3 {
             if !password.isEmpty {
+                //shytodo 保存密码md5
+                ZapryWalletManager.setCurrentPayPasswordMD5(payPasswordMD5: password.md5)
                 self.transferToSecurityStore(type: type,isSave: isSaveWallet,password:password)
                 completion(true,"")
             } else {
@@ -389,6 +391,21 @@ public class ZapryPrivateKeyHelper: NSObject {
         var pas:String?
         if (ZaprySecurityStore.hasWalletThatAuthByPayPassword() ) {
             pas = ZaprySecurityStore.getWalletThatAuthByPayPassword(payPassword:payModel.payPassword)
+        }else {
+            //shytodo 保存密码MD5
+            if let md5 = ZapryWalletManager.getCurrentPayPasswordMD5() {
+                if ( payModel.payPassword.md5 == md5 ) { // 验证通过
+                    completion(ZapryResultAction.success.rawValue,"","")
+                    if ( sceneType == .CreateWallet || sceneType == .CloudBackup ) {
+                        self.setPayPasword(password: payModel.payPassword)
+                    }
+                } else {
+                    completion(ZapryResultAction.fail.rawValue,"","")
+                }
+            } else {
+                completion(ZapryResultAction.success.rawValue,"","")
+            }
+            return
         }
         if let value = pas,!value.isEmpty {
             completion(ZapryResultAction.success.rawValue,value,"")
