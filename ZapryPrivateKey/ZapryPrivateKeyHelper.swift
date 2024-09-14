@@ -242,13 +242,15 @@ public class ZapryPrivateKeyHelper: NSObject {
         }
     }
     
-    public func deleteWallet() {
+    public func deleteWallet(isAdd:Bool = false) {
         guard self.checkOptions() else {
             return
         }
         ZapryWalletManager.deleteWallet()
         //shytodo 原业务没有
-//        ZapryPrivateKeyHelper.shared.savePaymentVerificationMethod(type: .none)
+        if !isAdd {
+//            ZapryPrivateKeyHelper.shared.savePaymentVerificationMethod(type: .none)
+        }
     }
     
     public func deleteNewWallet() {
