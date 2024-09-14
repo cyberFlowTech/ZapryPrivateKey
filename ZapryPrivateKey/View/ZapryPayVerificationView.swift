@@ -425,7 +425,6 @@ class ZapryPayVerificationView:UIView {
         label.textColor = UIColor(hex: "#323232")
         label.textAlignment = .center
         label.lineBreakMode = .byTruncatingTail
-        label.backgroundColor = .blue
         return label
     }()
     
@@ -434,7 +433,6 @@ class ZapryPayVerificationView:UIView {
         label.font = ZapryUtil.kZapryMediumFont(size: 19)
         label.textColor = UIColor(hex: "#323232")
         label.textAlignment = .center
-        label.backgroundColor = .red
         return label
     }()
     

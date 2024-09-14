@@ -218,7 +218,7 @@ public class ZapryPrivateKeyHelper: NSObject {
                     //由于解绑之后不会删除支付验证方式的存储，创建钱包的时候需要特殊处理
                     if sceneType == .CreateWallet {
                         ZapryDeviceInfo.authByFaceIDOrTouchID { e in
-                            if let e {
+                            if e != nil {
                                 completion(ZapryResultAction.fail.rawValue,"","")
                             } else {
                                 completion(ZapryResultAction.success.rawValue,"","")
