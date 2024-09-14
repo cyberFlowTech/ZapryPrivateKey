@@ -49,6 +49,7 @@ public class ZapryPrivateKeyHelper: NSObject {
     public static let shared = ZapryPrivateKeyHelper()
     public static let ERROR_CODE_BIOMETRIC_FAILED:Int = -10001
     public static let ERROR_CODE_PASSWORD_FAILED:Int = -10002
+    public static let ZAPRY_REPROT_NOTIFICATION = Notification.Name("Zapry_Report_Notification")
     private var sceneListWithoutUI:[ZaprySceneType] = [.unBind,.checkMnemonicWord,.CreateWallet,.VerificationBiometic,.PayPasswordAuth,.AddNewChain,.CloudBackup,.Sign]
     public var CompletionHandle: ((_ type:Int) -> Void)?
     
@@ -192,6 +193,7 @@ public class ZapryPrivateKeyHelper: NSObject {
                 let type = ZapryDeviceInfo.getDeviceBiometricType()
                 if type == .none || type == .denyBiometry || type == .lock {
                     ZapryUtil.makeToast(ZapryNSI18n.shared.biometric_disabler_tip, isError: true, forView: window)
+                    NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"DeviceBiometric enable"])
                     return
                 }
             }
@@ -394,10 +396,12 @@ public class ZapryPrivateKeyHelper: NSObject {
             pas = ZaprySecurityStore.getWalletThatAuthByPayPassword(payPassword:payModel.payPassword)
         }else {
             //shytodo 保存密码MD5
+            NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"use password MD5 verification"])
             if let md5 = ZapryWalletManager.getCurrentPayPasswordMD5() {
                 if ( payModel.payPassword.md5 == md5 ) { // 验证通过
                     completion(ZapryResultAction.success.rawValue,"","")
                 } else {
+                    NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"password verification failed"])
                     completion(ZapryResultAction.fail.rawValue,"","")
                 }
             } else {

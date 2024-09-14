@@ -33,6 +33,7 @@ public class ZapryDeviceInfo {
         let result = LAContext().canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
         if ( result == false ) {
             if let e = error {
+                NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"local auth error : debug \(e.debugDescription) [\(e.code)]"])
                 return e
             }
             return NSError()
@@ -60,6 +61,7 @@ public class ZapryDeviceInfo {
             } catch let error {
                 DispatchQueue.main.async {
                     let e = error as NSError
+                    NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"local auth error : debug \(e.debugDescription) [\(e.code)]"])
                     comp(e)
                 }
             }
@@ -69,6 +71,11 @@ public class ZapryDeviceInfo {
     public static func getDeviceBiometricType() -> ZapryDeviceBiometricType {
         var error: NSError?
         guard LAContext().canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
+            let errorLog = ZapryJSONUtil.dicToJsonString(dic: error?.userInfo ?? [:]) ?? ""
+            if !errorLog.isEmpty {
+                let errorStr = "device Owner Authentication:code:\(error?.code ?? 0),error:\(errorLog)"
+                NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":errorLog])
+            }
             if error?.code == -8 {
                 return .lock
             }

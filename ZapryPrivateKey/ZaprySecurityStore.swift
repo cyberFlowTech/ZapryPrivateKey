@@ -271,6 +271,7 @@ import CryptoSwift
             }
         }
         if status != errSecSuccess {
+            NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"MMSS setSSItem error:\(status)"])
             return false
         }
         return true
@@ -280,6 +281,7 @@ import CryptoSwift
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         if status != errSecSuccess {
+            NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"MMSS getSSItem error:\(status)"])
             return nil
         }
         if let r = (result as? Data) {
@@ -292,6 +294,7 @@ import CryptoSwift
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         if status != errSecSuccess {
+            NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"MMSS getSSItems error:\(status)"])
             return nil
         }
         if let r = ( result as? Array<Dictionary<String,Any>> ) {
@@ -303,6 +306,7 @@ import CryptoSwift
     private static func deleteSSItem(query: Dictionary<String,Any>) -> Bool {
         let status = SecItemDelete(query as CFDictionary)
         if status != errSecSuccess {
+            NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"MMSS deleteSSItem error:\(status)"])
             return false
         }
         return true

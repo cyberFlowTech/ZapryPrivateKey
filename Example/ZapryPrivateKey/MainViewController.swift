@@ -31,6 +31,7 @@ class MainViewController:UIViewController {
         NotificationCenter.default.addObserver(self, selector:#selector(removeRNVC(notif: )), name:NSNotification.Name("REMOVERNVC"), object:nil)
         NotificationCenter.default.addObserver(self, selector: #selector(gotoVerifictionTypeVC(notif:)), name: NSNotification.Name("GOTO_SET_VERFICATION_TYPE"), object: nil)
         NotificationCenter.default.addObserver(self, selector:#selector(gotoWalletVC(notif:)), name: Notification.Name("GOTOWALLET"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(reportLog(notification: )), name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil)
         
         ZapryPrivateKeyHelper.shared.initOptions(userId:"844097",language:.en)
         self.navigationController?.navigationBar.isHidden = true
@@ -87,6 +88,12 @@ class MainViewController:UIViewController {
         ZapryPrivateKeyHelper.shared.deleteWallet()
         RNManager.shared.closeRNVC()
         ZapryUtil.makeToast("Delete Successful", isError:false, forView: ZapryUtil.keyWindow())
+    }
+    
+    @objc func reportLog(notification:Notification) {
+        if let userInfo = notification.userInfo,let error = userInfo["error"] as? String,!error.isEmpty {
+            print("\(error)")
+        }
     }
 
     lazy var clickBtn:UIButton = {
