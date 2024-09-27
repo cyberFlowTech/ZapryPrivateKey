@@ -1,6 +1,0 @@
-framework module Pods_ZapryPrivateKey_Example {
-  umbrella header "Pods-ZapryPrivateKey_Example-umbrella.h"
-
-  export *
-  module * { export * }
-}

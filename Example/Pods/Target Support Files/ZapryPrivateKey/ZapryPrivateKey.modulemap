@@ -1,6 +1,0 @@
-framework module ZapryPrivateKey {
-  umbrella header "ZapryPrivateKey-umbrella.h"
-
-  export *
-  module * { export * }
-}
