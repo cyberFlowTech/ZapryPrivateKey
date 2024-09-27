@@ -25,18 +25,16 @@ TODO: Add long description of the pod here.
   # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { '285275534' => '285275534@qq.com' }
-  s.source           = { :git => 'https://github.com/285275534/ZapryPrivateKey.git', :tag => s.version.to_s }
-  # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
+  s.source           = {  :git => 'file:./ZapryPrivateKey', :tag => s.version.to_s }
+  s.swift_version = '5.0'
+  s.requires_arc = true
+  s.ios.deployment_target = '13.0'
+  s.source_files =  "ZapryPrivateKey/**/*.{swift,h,m}"
+  s.resource = "ZapryPrivateKey/ZapryPrivateKey.bundle"
 
-  s.ios.deployment_target = '10.0'
+  s.dependency 'KeychainAccess', '~> 4.2.2'
+  s.dependency 'HandyJSON', '~> 5.0.2'
+  s.dependency 'CryptoSwift'
+  s.dependency 'SnapKit', '~> 5.6.0'
 
-  s.source_files = 'ZapryPrivateKey/Classes/**/*'
-  
-  # s.resource_bundles = {
-  #   'ZapryPrivateKey' => ['ZapryPrivateKey/Assets/*.png']
-  # }
-
-  # s.public_header_files = 'Pod/Classes/**/*.h'
-  # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
 end

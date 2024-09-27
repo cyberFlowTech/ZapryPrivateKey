@@ -1,5 +1,5 @@
 import XCTest
-import ZapryPrivateKey
+//import ZapryPrivateKey
 
 class Tests: XCTestCase {
     

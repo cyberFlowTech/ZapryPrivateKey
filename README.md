@@ -27,3 +27,21 @@ pod 'ZapryPrivateKey'
 ## License
 
 ZapryPrivateKey is available under the MIT license. See the LICENSE file for more info.
+
+shy todo 
+这三种情况流程都是中断的(验证界面都是RN的)，导致会保留用户输入密码。解决方案可以修改为原生的，但是需要RN修改逻辑
+1.创建钱包 (payType:9)
+2.备份到iCloud (payType:12)
+3.设置生物识别的时候验证密码 (payType:10)
+
+4.密码的md5会保存到userDefault上，是因为解绑钱包之后，支付设置方式需要保留导致的。
+5.2.8之前的privateKey是存储在UserDefault上的，使用kMultiUdKey来存储的，感觉这种方式可以废弃掉，目前还保留着,建议废弃掉
+6.以下几种场景都是在rn界面上输入密码的
+    查看助记词(payType:4)，
+    解绑(payType:5)，
+    创建钱包(payType:9)，
+    设置生物识别的时候验证密码(payType:10)，
+    加链(payType:11)，
+    保存icloud(payType:12)
+    
+shy 将sdk集成至app中：origin/feature/Wallet_sdk_0828
