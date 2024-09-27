@@ -374,7 +374,7 @@ public class ZapryPrivateKeyHelper: NSObject {
         if hasNoWallet {
             subContent = hasPassword ? ZapryNSI18n.shared.biometric_setting_pay_password_desc : ZapryNSI18n.shared.biometric_setting_biometric_desc 
         }
-        let alertView = ZapryAlertView(title:title, content:content,subContent:subContent, confirmText:ZapryNSI18n.shared.common_skip, cancelText:ZapryNSI18n.shared.common_skip)
+        let alertView = ZapryAlertView(title:title, content:content,subContent:subContent, confirmText:ZapryNSI18n.shared.common_setting_now, cancelText:ZapryNSI18n.shared.common_skip)
         alertView.confirmHandle = { v in
             let verifyType = hasPassword ? 3 : ZapryDeviceInfo.getDeviceBiometricType().rawValue
             NotificationCenter.default.post(name: NSNotification.Name("GOTO_SET_VERFICATION_TYPE"), object: nil, userInfo: ["type":verifyType])
