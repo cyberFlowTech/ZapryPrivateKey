@@ -88,6 +88,7 @@ class MainViewController:UIViewController {
         ZapryPrivateKeyHelper.shared.deleteWallet()
         RNManager.shared.closeRNVC()
         ZapryUtil.makeToast("Delete Successful", isError:false, forView: ZapryUtil.keyWindow())
+        ZapryPrivateKeyHelper.shared.savePaymentVerificationMethod(type: .none)
     }
     
     @objc func reportLog(notification:Notification) {

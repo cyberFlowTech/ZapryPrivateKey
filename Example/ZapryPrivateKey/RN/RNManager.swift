@@ -244,7 +244,7 @@ extension RNManager {
             if checkAction == .success {
                 if sceneType == .checkMnemonicWord {
                     var dict = [String:Any]()
-                    let model = ZapryWalletManager.stringToModel(s: result)
+                    let model = ZapryPrivateKeyHelper.stringToModel(s: result)
                     dict["mnemonic"] = model?.mnemonic
                     resolver?(dict)
                 }else if sceneType == .PayPasswordAuth {
@@ -252,7 +252,7 @@ extension RNManager {
                     resolver?(true)
                 } else {
                     if !chainCode.isEmpty{
-                        let model = ZapryWalletManager.stringToModel(s: result,chainCode: chainCode)
+                        let model = ZapryPrivateKeyHelper.stringToModel(s: result,chainCode: chainCode)
                         var dict = [String:Any]()
                         dict["mnemonic"] = model?.mnemonic ?? ""
                         if chainCode == "-1" {
