@@ -523,12 +523,14 @@ PODS:
   - SDWebImageWebPCoder (0.8.5):
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.10)
+  - SnapKit (5.6.0)
   - SocketRocket (0.6.1)
   - Yoga (1.14.0)
   - ZapryPrivateKey (0.1.0):
-    - CryptoSwift (~> 1.7.0)
+    - CryptoSwift
     - HandyJSON (~> 5.0.2)
     - KeychainAccess (~> 4.2.2)
+    - SnapKit (~> 5.6.0)
 
 DEPENDENCIES:
   - boost (from `./node_modules/react-native/third-party-podspecs/boost.podspec`)
@@ -605,6 +607,7 @@ SPEC REPOS:
     - lottie-ios
     - SDWebImage
     - SDWebImageWebPCoder
+    - SnapKit
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -798,9 +801,10 @@ SPEC CHECKSUMS:
   RNVectorIcons: 6731bd488db95f4197433b30d81d03dc228b367e
   SDWebImage: a7f831e1a65eb5e285e3fb046a23fcfbf08e696d
   SDWebImageWebPCoder: 908b83b6adda48effe7667cd2b7f78c897e5111d
+  SnapKit: e01d52ebb8ddbc333eefe2132acf85c8227d9c25
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 86fed2e4d425ee4c6eab3813ba1791101ee153c6
-  ZapryPrivateKey: 69d5ab8f329fc4436f20dad60fcf3158af8c47ee
+  ZapryPrivateKey: 21466ddff14f8fe1b1c1cec0e0f9e505f94d0520
 
 PODFILE CHECKSUM: 10083529a28ce72c746da77df8161b28a016cd77
 
