@@ -310,6 +310,7 @@ public class ZapryPrivateKeyHelper: NSObject {
     
     public func getPaymentVerificationMethod() -> ZapryDeviceBiometricType {
         guard let option = self.zapryOptions,!option.userId.isEmpty else {
+            NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"getPaymentVerificationMethod:\(self.zapryOptions == nil ? "option is nil": "userId is empty")"])
             return .none
         }
         let saveKey:String  = "PaymentVerificationType_\(option.userId)"
@@ -317,6 +318,7 @@ public class ZapryPrivateKeyHelper: NSObject {
         if let value = ZapryUtil.readObject(key:saveKey) as? Int {
             type = value
         }
+        NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"getPaymentVerificationMethod:\(type)"])
         return ZapryDeviceBiometricType(rawValue: type) ?? .none
     }
     
