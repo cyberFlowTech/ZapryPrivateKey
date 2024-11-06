@@ -139,6 +139,7 @@ public class ZapryUtil {
             style.isHorizontal = false
             let imageName = isError ? "toast_error_icon" : "toast_ right_icon"
             let image = ZapryUtil.shared.getBundleImage(imageName: imageName)
+            NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"toast : \(message ?? "")"])
             view?.zapryMakeToast(message, position: .center, image:image,style:style)
         }
     }

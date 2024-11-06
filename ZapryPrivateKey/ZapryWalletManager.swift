@@ -206,15 +206,25 @@ public struct WalletModel: Codable {
                 return nil
             }
         }
-        if let s = UserDefaults.standard.value(forKey: ZapryWalletManager.kAddressKey) as? String {
-            if let dic = ZapryJSONUtil.stringToDic(s) {
-                var result: [String: String] = [:]
-                for (k, v) in dic {
-                    if let vv = v as? String {
-                        result[k] = vv
+        // 取非敏感数据
+        switch type {
+        case .faceID, .touchID, .password:
+            if let s = UserDefaults.standard.value(forKey: ZapryWalletManager.kAddressKey) as? String {
+                if let dic = ZapryJSONUtil.stringToDic(s) {
+                    var result: [String: String] = [:]
+                    for (k, v) in dic {
+                        if let vv = v as? String {
+                            result[k] = vv
+                        }
                     }
+                    return result
                 }
-                return result
+            }
+        case .none,.denyBiometry,.lock:
+            if let s = UserDefaults.standard.value(forKey: ZapryWalletManager.kMultiUdKey) as? String {
+                if let model = ZapryPrivateKeyHelper.stringToModel(s: s) {
+                    return ZapryWalletManager.getMultiAddressFromModel(model: model)
+                }
             }
         }
         return nil

@@ -66,6 +66,7 @@ public class ZapryPrivateKeyHelper: NSObject {
     
     public func changeLanOptions(lanaguage:ZaprySDKLanguange) {
         guard self.checkOptions() else {
+            self.checkPrivateKeyInit(method: "changeLanOptions")
             return
         }
         self.zapryOptions?.lan = lanaguage
@@ -84,13 +85,18 @@ public class ZapryPrivateKeyHelper: NSObject {
     
     public func getUserIdFromOptions() -> String {
         guard let option = self.zapryOptions else {
+            self.checkPrivateKeyInit(method: "getUserIdFromOptions")
             return ""
+        }
+        if option.userId.isEmpty {
+            self.checkPrivateKeyInit(method: "getUserIdFromOptions")
         }
         return option.userId
     }
     
     public func setPayAuth(params:[String:Any]?,isSaveWallet:Bool,completion:@escaping (Bool,String)->Void) {
         guard self.checkOptions() else {
+            self.checkPrivateKeyInit(method: "setPayAuth")
             completion(false,"")
             return
         }
@@ -147,6 +153,7 @@ public class ZapryPrivateKeyHelper: NSObject {
     
     private func setWalletInfo(mnemonic:String,wallet:[String: Any],password:String,backupID:String?,completion:@escaping (Bool,String)->Void) {
         guard self.checkOptions() else {
+            self.checkPrivateKeyInit(method: "setWalletInfo")
             return
         }
         ZapryWalletManager.setMultiWalletInfo(mnemonic:mnemonic, wallet: wallet, password: password, backupID: backupID) { result, msg in
@@ -181,6 +188,7 @@ public class ZapryPrivateKeyHelper: NSObject {
     
     func checkBeforePayOrSet(hasSet:Bool,forceSetPassworld:Bool = false, sceneType:ZaprySceneType = .none,payModel:ZapryPayModel = ZapryPayModel(),completion:@escaping (Int,String,String) -> Void) {
         guard self.checkOptions() else {
+            self.checkPrivateKeyInit(method: "checkBeforePayOrSet")
             return
         }
         let verificationType = ZapryPrivateKeyHelper.shared.getPaymentVerificationMethod()
@@ -245,6 +253,7 @@ public class ZapryPrivateKeyHelper: NSObject {
     
     public func deleteWallet(isAdd:Bool = false) {
         guard self.checkOptions() else {
+            self.checkPrivateKeyInit(method: "deleteWallet")
             return
         }
         ZapryWalletManager.deleteWallet()
@@ -256,6 +265,7 @@ public class ZapryPrivateKeyHelper: NSObject {
     
     public func deleteNewWallet() {
         guard self.checkOptions() else {
+            self.checkPrivateKeyInit(method: "deleteNewWallet")
             return
         }
         ZapryWalletManager.deleteNewWallet()
@@ -310,7 +320,7 @@ public class ZapryPrivateKeyHelper: NSObject {
     
     public func getPaymentVerificationMethod() -> ZapryDeviceBiometricType {
         guard let option = self.zapryOptions,!option.userId.isEmpty else {
-            NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"getPaymentVerificationMethod:\(self.zapryOptions == nil ? "option is nil": "userId is empty")"])
+            self.checkPrivateKeyInit(method: "getPaymentVerificationMethod")
             return .none
         }
         let saveKey:String  = "PaymentVerificationType_\(option.userId)"
@@ -318,12 +328,16 @@ public class ZapryPrivateKeyHelper: NSObject {
         if let value = ZapryUtil.readObject(key:saveKey) as? Int {
             type = value
         }
-        NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"getPaymentVerificationMethod:\(type)"])
         return ZapryDeviceBiometricType(rawValue: type) ?? .none
+    }
+    
+    public func checkPrivateKeyInit(method:String) {
+        NotificationCenter.default.post(name:Notification.Name("CheckPrivateKeyInitNotification"), object: nil, userInfo: ["location":method])
     }
     
     public func savePaymentVerificationMethod(type:ZapryDeviceBiometricType) {
        guard self.checkOptions() else {
+           self.checkPrivateKeyInit(method: "savePaymentVerificationMethod")
            return
        }
        let saveKey:String  = "PaymentVerificationType_\(self.zapryOptions?.userId ?? "")"
@@ -376,7 +390,7 @@ public class ZapryPrivateKeyHelper: NSObject {
         if hasNoWallet {
             subContent = hasPassword ? ZapryNSI18n.shared.biometric_setting_pay_password_desc : ZapryNSI18n.shared.biometric_setting_biometric_desc 
         }
-        let alertView = ZapryAlertView(title:title, content:content,subContent:subContent, confirmText:ZapryNSI18n.shared.common_setting_now, cancelText:ZapryNSI18n.shared.common_skip)
+        let alertView = ZapryAlertView(title:title, content:content,subContent:subContent, confirmText:ZapryNSI18n.shared.common_skip, cancelText:ZapryNSI18n.shared.common_skip)
         alertView.confirmHandle = { v in
             let verifyType = hasPassword ? 3 : ZapryDeviceInfo.getDeviceBiometricType().rawValue
             NotificationCenter.default.post(name: NSNotification.Name("GOTO_SET_VERFICATION_TYPE"), object: nil, userInfo: ["type":verifyType])
