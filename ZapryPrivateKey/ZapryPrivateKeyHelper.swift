@@ -327,6 +327,8 @@ public class ZapryPrivateKeyHelper: NSObject {
         var type = 0
         if let value = ZapryUtil.readObject(key:saveKey) as? Int {
             type = value
+        }else {
+            NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"getPaymentVerificationMethod git nil:\(saveKey)"])
         }
         return ZapryDeviceBiometricType(rawValue: type) ?? .none
     }
