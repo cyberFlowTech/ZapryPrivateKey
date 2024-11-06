@@ -57,7 +57,9 @@ public class ZapryPrivateKeyHelper: NSObject {
     
     public func initOptions(userId:String,language:ZaprySDKLanguange = .en) {
         if userId.isEmpty {
-            ZapryUtil.makeToast("userId is empty", isError:true, forView: ZapryUtil.keyWindow())
+            DispatchQueue.main.async {
+                ZapryUtil.makeToast("userId is empty", isError:true, forView: ZapryUtil.keyWindow())
+            }
             return
         }
         self.zapryOptions = ZapryUserInfoModel(userId: userId,language:language)
@@ -78,7 +80,9 @@ public class ZapryPrivateKeyHelper: NSObject {
         if let options = self.zapryOptions,!options.userId.isEmpty {
             isInit = true
         }else {
-            ZapryUtil.makeToast("zapryOptions is not initialized", isError:true, forView: ZapryUtil.keyWindow())
+            DispatchQueue.main.async {
+                ZapryUtil.makeToast("zapryOptions is not initialized", isError:true, forView: ZapryUtil.keyWindow())
+            }
         }
         return isInit
     }
