@@ -327,11 +327,29 @@ public class ZapryPrivateKeyHelper: NSObject {
             self.checkPrivateKeyInit(method: "getPaymentVerificationMethod")
             return .none
         }
-        let saveKey:String  = "PaymentVerificationType_\(option.userId)"
+        let saveKey: String = String.init(format: "PaymentVerificationType_%@", option.userId)
         var type = 0
+        
         if let value = ZapryUtil.readObject(key:saveKey) {
-            type = Int("\(value)") ?? 0 
-        }else {
+            if let valueInt = value as? Int {
+                type = valueInt
+                
+            } else if let valueNumber = value as? NSNumber {
+                type = valueNumber.intValue
+                
+            } else if let valueString = value as? String {
+                type = Int(valueString) ?? 0
+                
+            } else if let valueNSString = value as? NSString {
+                type = Int(valueNSString.intValue)
+                
+            } else {
+                type =  Int("\(value)") ?? 0
+                
+                NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"getPaymentVerificationMethod git value is object ; saveKey=\(saveKey) ; type = \(type)"])
+            }
+
+        } else {
             NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"getPaymentVerificationMethod git \(ZapryUtil.readObject(key:saveKey) ?? ""):\(saveKey)"])
         }
         return ZapryDeviceBiometricType(rawValue: type) ?? .none
@@ -342,13 +360,15 @@ public class ZapryPrivateKeyHelper: NSObject {
     }
     
     public func savePaymentVerificationMethod(type:ZapryDeviceBiometricType) {
-       guard self.checkOptions() else {
-           self.checkPrivateKeyInit(method: "savePaymentVerificationMethod")
-           return
-       }
-       let saveKey:String  = "PaymentVerificationType_\(self.zapryOptions?.userId ?? "")"
-        NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"savePaymentVerificationMethod \(saveKey):\(type.rawValue)"])
-       ZapryUtil.saveObject(object: type.rawValue, key: saveKey)
+        guard self.checkOptions() else {
+            self.checkPrivateKeyInit(method: "savePaymentVerificationMethod")
+            return
+        }
+         let saveKey: String = String.init(format: "PaymentVerificationType_%@", self.zapryOptions?.userId ?? "")
+         NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"savePaymentVerificationMethod \(saveKey):\(type.rawValue)"])
+         
+         UserDefaults.standard.set(type.rawValue, forKey: saveKey)
+         UserDefaults.standard.synchronize()
     }
     
     public func getUndecryptWalletsThatAuthByBackupPassword() -> Dictionary<String,String> {
