@@ -347,6 +347,7 @@ public class ZapryPrivateKeyHelper: NSObject {
            return
        }
        let saveKey:String  = "PaymentVerificationType_\(self.zapryOptions?.userId ?? "")"
+        NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"savePaymentVerificationMethod \(saveKey):\(type.rawValue)"])
        ZapryUtil.saveObject(object: type.rawValue, key: saveKey)
     }
     
