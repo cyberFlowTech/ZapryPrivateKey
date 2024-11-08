@@ -350,7 +350,8 @@ public class ZapryPrivateKeyHelper: NSObject {
             }
 
         } else {
-            NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"getPaymentVerificationMethod git \(ZapryUtil.readObject(key:saveKey) ?? ""):\(saveKey)"])
+            let integerValue = UserDefaults.standard.integer(forKey: saveKey)
+            NotificationCenter.default.post(name: ZapryPrivateKeyHelper.ZAPRY_REPROT_NOTIFICATION, object: nil, userInfo: ["error":"getPaymentVerificationMethod git \(ZapryUtil.readObject(key:saveKey) ?? ""):\(saveKey); integerValue = \(integerValue)"])
         }
         return ZapryDeviceBiometricType(rawValue: type) ?? .none
     }
