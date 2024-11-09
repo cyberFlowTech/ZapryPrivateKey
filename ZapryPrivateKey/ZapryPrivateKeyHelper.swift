@@ -54,6 +54,7 @@ public class ZapryPrivateKeyHelper: NSObject {
     public var CompletionHandle: ((_ type:Int) -> Void)?
     
     var zapryOptions:ZapryUserInfoModel?
+    public var payTypeWithCache:ZapryDeviceBiometricType = .none 
     
     public func initOptions(userId:String,language:ZaprySDKLanguange = .en) {
         if userId.isEmpty {
@@ -64,6 +65,7 @@ public class ZapryPrivateKeyHelper: NSObject {
         }
         self.zapryOptions = ZapryUserInfoModel(userId: userId,language:language)
         ZapryUtil.shared.setPreferredLanguage(lan:language)
+        self.payTypeWithCache = self.getPaymentVerificationMethod(isCache:false)
     }
     
     public func changeLanOptions(lanaguage:ZaprySDKLanguange) {
@@ -85,6 +87,10 @@ public class ZapryPrivateKeyHelper: NSObject {
             }
         }
         return isInit
+    }
+    
+    public func clearCache() {
+        self.payTypeWithCache = .none
     }
     
     public func getUserIdFromOptions() -> String {
@@ -322,10 +328,13 @@ public class ZapryPrivateKeyHelper: NSObject {
         return result
     }
     
-    public func getPaymentVerificationMethod() -> ZapryDeviceBiometricType {
+    public func getPaymentVerificationMethod(isCache:Bool = true) -> ZapryDeviceBiometricType {
         guard let option = self.zapryOptions,!option.userId.isEmpty else {
             self.checkPrivateKeyInit(method: "getPaymentVerificationMethod")
             return .none
+        }
+        if isCache && self.payTypeWithCache.rawValue > 0 {
+            return self.payTypeWithCache
         }
         let saveKey: String = String.init(format: "PaymentVerificationType_%@", option.userId)
         var type = 0
@@ -370,6 +379,7 @@ public class ZapryPrivateKeyHelper: NSObject {
          
          UserDefaults.standard.set(type.rawValue, forKey: saveKey)
          UserDefaults.standard.synchronize()
+        self.payTypeWithCache = type
     }
     
     public func getUndecryptWalletsThatAuthByBackupPassword() -> Dictionary<String,String> {
