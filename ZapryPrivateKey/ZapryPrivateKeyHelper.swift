@@ -183,7 +183,7 @@ public class ZapryPrivateKeyHelper: NSObject {
         }
         let sceneType = ZaprySceneType(rawValue:payType) ?? .none
         let verificationType = ZapryPrivateKeyHelper.shared.getPaymentVerificationMethod()
-        let whiteList:[ZaprySceneType] = [.CloudBackup,.PayPasswordAuth,.CreateWallet]
+        let whiteList:[ZaprySceneType] = [.CloudBackup,.PayPasswordAuth,.CreateWallet,.AddNewChain]
         if verificationType == .password && (whiteList.contains(sceneType)) {
             ZapryWalletManager.shared.setPayPasword(password: payModel.payPassword)
         }
