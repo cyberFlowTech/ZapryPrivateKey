@@ -201,11 +201,11 @@ public struct WalletModel: Codable {
     
     static func getMultiAddress() -> [String: String]? {
         let type = ZapryPrivateKeyHelper.shared.getPaymentVerificationMethod()
-        if ( type == .password ) { // 一个补丁：修复两个存储不一致的情况
-            if ( ZaprySecurityStore.hasWalletThatAuthByPayPassword() == false ) {
-                return nil
-            }
-        }
+//        if ( type == .password ) { // 一个补丁：修复两个存储不一致的情况
+//            if ( ZaprySecurityStore.hasWalletThatAuthByPayPassword() == false ) {
+//                return nil
+//            }
+//        }
         if let s = UserDefaults.standard.value(forKey: ZapryWalletManager.kAddressKey) as? String {
             if let dic = ZapryJSONUtil.stringToDic(s) {
                 var result: [String: String] = [:]
